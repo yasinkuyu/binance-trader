@@ -23,7 +23,7 @@ NameError: global name 'BinanceAPIException' is not defined
 NameError: global name 'Client' is not defined
 
     Set path
-    export PYTHONPATH="$PYTHONPATH:/Users/yasin/Desktop/BinanceTrader/binance"
+    export PYTHONPATH="$PYTHONPATH:/Users/yasin/Desktop/binance-trader/binance"
 
 
     

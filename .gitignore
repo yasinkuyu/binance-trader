@@ -2,3 +2,5 @@
 # @yasinkuyu
 
 config.py
+*.pyc
+.DS_Store
