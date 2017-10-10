@@ -2,5 +2,9 @@
 # @yasinkuyu
 
 config.py
+buysell2.py
+buysell.py
+config.pyc
+BinanceAPI.pyc
 *.pyc
 .DS_Store

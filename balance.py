@@ -1,22 +1,21 @@
 # -*- coding: UTF-8 -*-
 # @yasinkuyu
 
-from binance.client import Client
-from binance.exceptions import BinanceAPIException
+from BinanceAPI import *
 
 import config
  
 class Binance:
 
     def __init__(self):
-        self.client = Client(config.api_key, config.api_secret)
+        self.client = BinanceAPI(config.api_key, config.api_secret)
     
     def balances(self):
-        balances = self.client.get_account(recvWindow = config.recv_window)
+        balances = self.client.get_account()
     
         for balance in balances['balances'] :
             if int(balance["locked"]) > 0 or int(balance["free"]) > 0 :
-                print balance["asset"], balance["locked"], balance["free"] 
+                print '%s: %s' % (balance['asset'], balance['free'])
 
     def orders(self, symbol, limit):
         orders = self.client.get_all_orders(symbol=symbol, limit=limit)
