@@ -7,4 +7,6 @@ buysell.py
 config.pyc
 BinanceAPI.pyc
 *.pyc
+.pyc
 .DS_Store
+.gitignore	
