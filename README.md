@@ -6,7 +6,8 @@ Get an API and Secret Key, insert into coinfig.py
 
     https://www.binance.com/restapipub.html
 
- 
+ http://www.binance.com/?ref=10701111 
+
     
     
     
