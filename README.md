@@ -4,6 +4,8 @@ http://www.binance.com/?ref=10701111
 
 This is an experimental bot for auto trading the binance.com exchange.
 
+![Array and List](https://github.com/yasinkuyu/binance-trader/blob/master/screenshot.png)
+
 ## Configuration
 
     Rename config.sample.py to config.py
