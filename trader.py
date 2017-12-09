@@ -1,9 +1,19 @@
 # -*- coding: UTF-8 -*-
 # @yasinkuyu
 
+import time
+import config
 from BinanceAPI import *
 
-import config
+TEST_MODE = False
+
+PROFIT = 1.3 #percentage of profit
+ORDER_ID = None
+TARGET_PRICE = 0
+QUANTITY = 0.1
+INCREASING = 0.00000001
+TARGET_PROFIT_PRICE = None
+WAIT_TIME = 1  # seconds
 
 client = BinanceAPI(config.api_key, config.api_secret)
 
@@ -58,122 +68,129 @@ def checkorder(symbol, orderId):
         errexit(ret['msg'])
 
     return ret['status']
-
-
-symbol = 'LINKBTC'
-
-print "The crypto money symbol. Sample: %s" % symbol
-name = raw_input()
-
-if name != "":
-    symbol = name
+  
+def action(symbol):
+    global ORDER_ID
+    global TARGET_PRICE
+    global TARGET_PROFIT_PRICE
     
-profit = 1.3 #percentage of profit
-orderId = None
-targetPrice = 0
-quantity = 0.1
-testMode = True
-increasing = 0.00000001
-
-targetProfitPrice = None
-print '%%%s started to profit for %s' % (profit, symbol)
-
-if testMode:
-    print "Test mode active"
-    
-while True:
-
     ret = client.get_ticker(symbol)
     lastPrice = float(ret["lastPrice"])
 
     ret = client.get_orderbooks(symbol, 5)
     lastBid = float(ret['bids'][0][0])
     lastAsk = float(ret['asks'][0][0])
-
-    buyPrice = lastBid + increasing
-    sellPrice = lastAsk - increasing
-    checkProfitPrice = buyPrice + (buyPrice * profit / 100)
     
-    earnTotal = sellPrice - buyPrice
- 
-    targetPrice = sellPrice
+    buyPrice = lastBid + INCREASING
+    sellPrice = lastAsk - INCREASING
+    checkProfitPrice = buyPrice + (buyPrice * PROFIT / 100)
 
-    if orderId is None:
-        
-        #orderStatus = checkorder(symbol, orderId) --> illegal karakter hatası
-        
+    earnTotal = sellPrice - buyPrice
+
+    TARGET_PRICE = sellPrice
+
+    if ORDER_ID is None:
+
+        #orderStatus = checkorder(symbol, ORDER_ID) --> illegal karakter hatası
+
         print 'price:%.8f buyp:%.8f sellp:%.8f (bid:%.8f ask:%.8f) ' % (lastPrice, buyPrice, sellPrice, lastBid, lastAsk)
 
         if lastAsk >= checkProfitPrice:
-            
-            targetProfitPrice = checkProfitPrice
-            
-            if not testMode:
-                ret = client.buy_limit(symbol, quantity, buyPrice)
+
+            TARGET_PROFIT_PRICE = checkProfitPrice
+
+            if not TEST_MODE:
+                ret = client.buy_limit(symbol, QUANTITY, buyPrice)
                 if 'msg' in ret:
                     errexit(ret['msg'])
 
-                orderId = ret['orderId']
-            
+                ORDER_ID = ret['orderId']
+
                 print "******************"
-                print 'Order Id: %d' % orderId
-                
+                print 'Order Id: %d' % ORDER_ID
+
             else:
-                orderId = "100000"
-                        
-            print "Percentage of %s profit. Order created from %.8f. Profit: %.8f BTC" % (profit, sellPrice, earnTotal)
+                ORDER_ID = "100000"
+        
+            print "Percentage of %s profit. Order created from %.8f. Profit: %.8f BTC" % (PROFIT, sellPrice, earnTotal)
             print "#####################"
-            
+
         else:
-            
-            targetProfitPrice = None
-            
-            if orderId is not None:
-                
-                if not testMode:
-                    ret = client.cancel(symbol, orderId)
+
+            TARGET_PROFIT_PRICE = None
+
+            if ORDER_ID is not None:
+
+                if not TEST_MODE:
+                    ret = client.cancel(symbol, ORDER_ID)
                     if 'msg' in ret:
                         errexit(ret['msg'])
 
                 print 'Order has been canceled.'
-                
+
     else:
-        print "Target sell price: %.8f " % targetProfitPrice 
-        
-        if lastAsk >= targetProfitPrice:
-            
+        print "Target sell price: %.8f " % TARGET_PROFIT_PRICE 
+
+        if lastAsk >= TARGET_PROFIT_PRICE:
+
             ret = client.get_open_orders(symbol)
             if 'msg' in ret:
                 errexit(ret['msg'])
 
             print "Orders"
-            
+
             for order in ret:
                 price = float(order['price'])
                 origQty = float(order['origQty'])
                 executedQty = float(order['executedQty'])
-                
-                if order['orderId'] == orderId and testMode:
-                    
-                    if not testMode:
+
+                if order['orderId'] == ORDER_ID and TEST_MODE:
+    
+                    if not TEST_MODE:
                         print "Order: %d: %lf\t%lf\t%lf" % (order['orderId'], price, origQty, executedQty)
                     else:
                         print "Order: 0000"
-                        
-                    targetProfitPrice = None
-                    orderId = None
-                    
-                    if not testMode:
-                        ret = client.sell_limit(symbol, quantity, targetPrice)
-                        print 'Sales were made at %s price.' % (targetPrice)
+        
+                    TARGET_PROFIT_PRICE = None
+                    ORDER_ID = None
+    
+                    if not TEST_MODE:
+                        ret = client.sell_limit(symbol, QUANTITY, TARGET_PRICE)
+                        print 'Sales were made at %s price.' % (TARGET_PRICE)
                         print '---------------------------------------------'
-                        
+        
                         if 'msg' in ret:
                             errexit(ret['msg'])
 
                         print ret
                     else:
-                        print "Order Id: %s. The test order is complete. Price %s" % (orderId, targetPrice)
-                    
-                        
+                        print "Order Id: %s. The test order is complete. Price %s" % (ORDER_ID, TARGET_PRICE)
+
+      
+def main():
+    symbol = 'LINKBTC'
+
+    print "@yasinkuyu, 2017"
+    print "Auto Trading for Binance.com (Beta). Input your symbol. Ex: %s" % symbol
+    
+    name = raw_input()
+
+    if name != "":
+        symbol = name
+    
+    print 'Scanning for %%%s %s profit.' % (PROFIT, symbol)
+
+    if TEST_MODE:
+        print "Test mode active"
+    
+    while True:
         
+        startTime = time.time()
+        action(symbol)
+        endTime = time.time()
+
+        if endTime - startTime < WAIT_TIME:
+            time.sleep(WAIT_TIME - (endTime - startTime))
+                   
+if __name__ == "__main__":
+    main()
