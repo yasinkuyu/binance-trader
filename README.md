@@ -4,7 +4,7 @@ http://www.binance.com/?ref=10701111
 
 This is an experimental bot for auto trading the binance.com exchange.
 
-# Configuration
+## Configuration
 
     Rename config.sample.py to config.py
 
@@ -20,7 +20,7 @@ This is an experimental bot for auto trading the binance.com exchange.
     Secret key for account access
     api_secret = ''
  
-# Usage
+## Usage
 
     python trader.py
     
@@ -30,11 +30,11 @@ This is an experimental bot for auto trading the binance.com exchange.
     All binance symbols are supported.
     
      
-DISCLAIMER
+## DISCLAIMER
 
 I am not responsible for anything done with this bot. You use it at your own risk. There are no warranties or guarantees expressed or implied. You assume all responsibility and liability.
      
-License
+## License
 
 Code released under the MIT License.
      
