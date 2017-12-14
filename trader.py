@@ -19,7 +19,7 @@ from BinanceAPI import *
 
 TEST_MODE = False
 
-PROFIT = .5 #percentage of profit
+PROFIT = 1.3 #percentage of profit
 ORDER_ID = None
 TARGET_PRICE = 0
 QUANTITY = 2
