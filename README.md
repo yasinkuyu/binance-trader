@@ -39,7 +39,13 @@ I am not responsible for anything done with this bot. You use it at your own ris
 ## License
 
 Code released under the MIT License.
-     
+ 
+## Roadmap
+
+- Order tracking
+- Binance/Bittrex/HitBTC/Liqui Arbitrage  
+- GUI (PHP)
+
 ---
 
 Python 2.7
