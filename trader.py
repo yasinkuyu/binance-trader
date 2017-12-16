@@ -5,8 +5,6 @@ import sys
 import time
 import config
 
-import functions
-
 from BinanceAPI import *
 
 # trader.py --quantity -- symbol --profit --wait_time
