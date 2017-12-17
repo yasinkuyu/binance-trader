@@ -39,7 +39,15 @@ I am not responsible for anything done with this bot. You use it at your own ris
 ## License
 
 Code released under the MIT License.
- 
+
+## Contributing
+    Fork this Repo
+    Commit your changes (git commit -m 'Add some feature')
+    Push to the changes (git push)
+    Create a new Pull Request
+    
+    Thanks all for your contributions...
+    
 ## Roadmap
 
 - Order tracking
