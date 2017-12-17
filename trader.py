@@ -28,26 +28,26 @@ WAIT_TIME = 3  # default 3 seconds
 client = BinanceAPI(config.api_key, config.api_secret)
 
 def buy_limit(symbol, quantity, buyPrice):
+    global TEST_MODE
     
     if not TEST_MODE:
         
-        ret = client.buy_limit(symbol, QUANTITY, buyPrice)
+        ret = client.buy_limit(symbol, quantity, buyPrice)
         if 'msg' in ret:
             errexit(ret['msg'])
 
-        ORDER_ID = ret['orderId']
+        orderId = ret['orderId']
         
         file = open("ORDER", "w") 
-        file.write(ORDER_ID,QUANTITY,buyPrice) 
+        file.write("{}\n".format([symbol, orderId, quantity, buyPrice]))
         
         print "******************"
-        print 'Order Id: %d' % ORDER_ID
+        print 'Order Id: %d' % orderId
 
     else:
-        ORDER_ID = "100000"
-
-    print "Percentage of %s profit. Order created from %.8f. Profit: %.8f BTC" % (PROFIT, sellPrice, earnTotal)
-    print "#####################"
+        orderId = "100000"
+        
+    return orderId
 
 def sell_limit(symbol, quantity, orderId):
     global TEST_MODE
@@ -107,6 +107,7 @@ def errexit(msg):
 def action(symbol):
     
     global ORDER_ID
+    global QUANTITY
     global TARGET_PRICE
     global TARGET_PROFITABLE_PRICE
     
@@ -136,7 +137,10 @@ def action(symbol):
 
             TARGET_PROFITABLE_PRICE = profitablePrice
 
-            buy_limit(symbol, QUANTITY, buyPrice)
+            ORDER_ID = buy_limit(symbol, QUANTITY, buyPrice)
+
+            print "Percentage of %s profit. Order created from %.8f. Profit: %.8f BTC" % (PROFIT, sellPrice, earnTotal)
+            print "#####################"
 
         else:
 
@@ -150,7 +154,7 @@ def action(symbol):
 
         if lastAsk >= TARGET_PROFITABLE_PRICE:
 
-            sell_limit(symbol, QUANTITY, orderId)
+            sell_limit(symbol, QUANTITY, ORDER_ID)
 
 def main():
     symbol = 'IOTABTC'
