@@ -8,9 +8,7 @@ This is an experimental bot for auto trading the binance.com exchange.
 ## Configuration
 
     Rename config.sample.py to config.py
-
     and
-
     Get an API and Secret Key, insert into config.py
 
         https://www.binance.com/restapipub.html
@@ -38,13 +36,17 @@ This is an experimental bot for auto trading the binance.com exchange.
      
 ## DISCLAIMER
 
-    I am not responsible for anything done with this bot. You use it at your own risk. There are no warranties or guarantees expressed or implied. You assume all responsibility and liability.
+    I am not responsible for anything done with this bot. 
+    You use it at your own risk. 
+    There are no warranties or guarantees expressed or implied. 
+    You assume all responsibility and liability.
      
 ## License
 
     Code released under the MIT License.
 
 ## Contributing
+
     Fork this Repo
     Commit your changes (git commit -m 'Add some feature')
     Push to the changes (git push)
@@ -53,6 +55,7 @@ This is an experimental bot for auto trading the binance.com exchange.
     Thanks all for your contributions...
     
 ## Roadmap
+
     - Order tracking
     - Binance/Bittrex/HitBTC/Liqui Arbitrage  
 

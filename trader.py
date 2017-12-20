@@ -15,7 +15,7 @@ from BinanceAPI import *
 #sys.argv[2] #percentage of profit
 #sys.argv[3] #wait_time
 
-TEST_MODE = True
+TEST_MODE = False
 
 PROFIT = 1.3 #percentage of profit
 ORDER_ID = None
