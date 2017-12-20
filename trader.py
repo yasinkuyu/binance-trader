@@ -7,7 +7,7 @@ import config
 
 from BinanceAPI import *
 
-# trader.py --quantity -- symbol --profit --wait_time
+# trader.py --quantity --symbol --profit --wait_time
 # ex: trader.py 1 IOTABTC 1.3 1
 
 #int(sys.argv[0]) #quantity
@@ -15,7 +15,7 @@ from BinanceAPI import *
 #sys.argv[2] #percentage of profit
 #sys.argv[3] #wait_time
 
-TEST_MODE = False
+TEST_MODE = True
 
 PROFIT = 1.3 #percentage of profit
 ORDER_ID = None
@@ -30,23 +30,21 @@ client = BinanceAPI(config.api_key, config.api_secret)
 def buy_limit(symbol, quantity, buyPrice):
     global TEST_MODE
     
-    if not TEST_MODE:
-        
-        ret = client.buy_limit(symbol, quantity, buyPrice)
-        if 'msg' in ret:
-            errexit(ret['msg'])
+    if TEST_MODE:
+        return "100000"
+    
+    ret = client.buy_limit(symbol, quantity, buyPrice)
+    if 'msg' in ret:
+        errexit(ret['msg'])
 
-        orderId = ret['orderId']
-        
-        file = open("ORDER", "w") 
-        file.write("{}\n".format([symbol, orderId, quantity, buyPrice]))
-        
-        print "******************"
-        print 'Order Id: %d' % orderId
+    orderId = ret['orderId']
+    
+    file = open("ORDER", "w") 
+    file.write("{}\n".format([symbol, orderId, quantity, buyPrice]))
+    
+    print "******************"
+    print 'Order Id: %d' % orderId
 
-    else:
-        orderId = "100000"
-        
     return orderId
 
 def sell_limit(symbol, quantity, orderId):
@@ -96,6 +94,20 @@ def cancel_order(symbol, orderId):
 
         print 'Order has been canceled.'
 
+def check_order(symbol, orderId):
+
+    ret = client.query_order(symbol, orderId)
+    if 'msg' in ret:
+        errexit(ret['msg'])
+
+    #Canceled #Filled #Partial Fill
+    if ret['status'] != "CANCELED":
+        print "%s Order complated. Try sell..." % (orderId)
+        return True
+        
+    print "%s Order is open..." % (orderId)
+    return False
+   
 def get_ticker(symbol):
     ret = client.get_ticker(symbol)
     return float(ret["lastPrice"])
@@ -133,6 +145,7 @@ def action(symbol):
 
         print 'price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f BTC:$%.1f' % (lastPrice, buyPrice, sellPrice, lastBid, lastAsk, btcPrice)
 
+        # Did profit get caught
         if lastAsk >= profitablePrice:
 
             TARGET_PROFITABLE_PRICE = profitablePrice
@@ -145,16 +158,28 @@ def action(symbol):
         else:
 
             TARGET_PROFITABLE_PRICE = None
-
-            cancel_order(symbol, ORDER_ID)
-
+            
     else:
         
-        print "Target sell price: %.8f " % TARGET_PROFITABLE_PRICE 
-
-        if lastAsk >= TARGET_PROFITABLE_PRICE:
-
-            sell_limit(symbol, QUANTITY, ORDER_ID)
+        # If the order is complete, try to sell it.
+        if check_order(symbol, ORDER_ID):
+            
+            # Did profit get caught
+            if lastAsk >= TARGET_PROFITABLE_PRICE:
+ 
+                print "Target sell price: %.8f " % TARGET_PROFITABLE_PRICE 
+                
+                sell_limit(symbol, QUANTITY, ORDER_ID)
+                
+            #if the profit is lost, cancel order
+            else:
+                
+                print "%s Cancel order3" % (ORDER_ID)
+                
+                cancel_order(symbol, ORDER_ID)
+                
+                #Reset order id
+                ORDER_ID = None
 
 def main():
     symbol = 'IOTABTC'
@@ -167,7 +192,7 @@ def main():
     if name != "":
         symbol = name
     
-    print '%%%s profit for scanning %s' % (PROFIT, symbol)
+    print '%%%s profit scanning for %s' % (PROFIT, symbol)
     
     if TEST_MODE:
         print "Test mode active"
