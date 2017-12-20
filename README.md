@@ -1,8 +1,6 @@
 # Binance Trader (Beta)
 @yasinkuyu - 2017
 
-http://www.binance.com/?ref=10701111
-
 This is an experimental bot for auto trading the binance.com exchange.
 
 ![Screenshot](https://github.com/yasinkuyu/binance-trader/blob/master/screenshot.png)
@@ -57,6 +55,8 @@ This is an experimental bot for auto trading the binance.com exchange.
 ## Roadmap
     - Order tracking
     - Binance/Bittrex/HitBTC/Liqui Arbitrage  
+
+http://www.binance.com/?ref=10701111
 
 ---
 
