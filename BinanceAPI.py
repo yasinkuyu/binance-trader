@@ -34,12 +34,8 @@ class BinanceAPI:
         params = {"symbol": market}
         return self._get(path, params)
 
- 
 
     def buy_limit(self, market, quantity, rate):
-        quantity = self._chop(quantity, 2)
-        rate = self._chop(rate, 6)
-
         path = "%s/order" % self.BASE_URL
         params = {"symbol": market, "side": "BUY", \
             "type": "LIMIT", "timeInForce": "GTC", \
@@ -48,9 +44,6 @@ class BinanceAPI:
 
 
     def sell_limit(self, market, quantity, rate):
-        quantity = self._chop(quantity, 2)
-        rate = self._chop(rate, 6)
-
         path = "%s/order" % self.BASE_URL
         params = {"symbol": market, "side": "SELL", \
             "type": "LIMIT", "timeInForce": "GTC", \
@@ -59,8 +52,6 @@ class BinanceAPI:
 
 
     def buy_market(self, market, quantity):
-        quantity = self._chop(quantity, 2)
-
         path = "%s/order" % self.BASE_URL
         params = {"symbol": market, "side": "BUY", \
             "type": "MARKET", "quantity": quantity}
@@ -68,8 +59,6 @@ class BinanceAPI:
 
 
     def sell_market(self, market, quantity):
-        quantity = self._chop(quantity, 2)
-
         path = "%s/order" % self.BASE_URL
         params = {"symbol": market, "side": "SELL", \
             "type": "MARKET", "quantity": quantity}
@@ -86,11 +75,6 @@ class BinanceAPI:
         path = "%s/order" % self.BASE_URL
         params = {"symbol": market, "orderId": order_id}
         return self._delete(path, params)
-
-
-    def _chop(self, v, n):
-        s = '%.10lf' % v
-        return s[:s.find('.')+n+1]
 
 
     def _get_no_sign(self, path, params={}):
@@ -136,4 +120,3 @@ class BinanceAPI:
         header = {"X-MBX-APIKEY": self.key}
         return requests.delete(url, headers=header, \
             timeout=30, verify=True).json()
-
