@@ -7,22 +7,22 @@ This is an experimental bot for auto trading the binance.com exchange.
 
 ## Configuration
 
-    1. Signup Binance ( Referral url: http://www.binance.com/?ref=10701111 )
-    2. Enable Two-factor Authentication    
-    3. Go API Center, https://www.binance.com/userCenter/createApi.html
-    4. Create New Key
-       [✓] Read Info [✓] Enable Trading [X] Enable Withdrawals 
-    6. Rename config.sample.py to config.py
-    7. Get an API and Secret Key, insert into config.py
+1. Signup Binance ( Referral url: https://www.binance.com/?ref=10701111 )
+2. Enable Two-factor Authentication    
+3. Go API Center, https://www.binance.com/userCenter/createApi.html
+4. Create New Key
+   [✓] Read Info [✓] Enable Trading [X] Enable Withdrawals 
+6. Rename config.sample.py to config.py
+7. Get an API and Secret Key, insert into config.py
 
-        API key for account access
-        api_key = ''
-    
-        Secret key for account access
-        api_secret = ''
-    
-        API Docs: https://www.binance.com/restapipub.html
-    
+    API key for account access
+    api_key = ''
+
+    Secret key for account access
+    api_secret = ''
+
+    API Docs: https://www.binance.com/restapipub.html
+
  
 ## Requirements
 
