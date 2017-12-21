@@ -11,8 +11,8 @@ from BinanceAPI import *
 parser = argparse.ArgumentParser()
 parser.add_argument("--quantity", type=int, help="Buy/Sell Quantity", default=3)
 parser.add_argument("--symbol", type=str, help="Market Symbol (Ex: IOTABTC)", default='IOTABTC')
-parser.add_argument("--profit", type=int, help="Target Profit", default=1.3)
-parser.add_argument("--orderid", type=int, help="Target Order Id", default=None)
+parser.add_argument("--profit", type=float, help="Target Profit", default=1.3)
+parser.add_argument("--orderid", type=int, help="Target Order Id", default=0)
 parser.add_argument("--testmode", type=bool, help="Test Mode True/False", default=False)
 parser.add_argument("--wait_time", type=int, help="Wait Time (seconds)", default=3)
 
@@ -71,7 +71,7 @@ def sell_limit(symbol, quantity, orderId):
             print "Order: %d: %lf\t%lf\t%lf" % (order['orderId'], price, origQty, executedQty)
      
             TARGET_PROFITABLE_PRICE = None
-            ORDER_ID = None
+            ORDER_ID = 0
 
             if not TEST_MODE:
                 ret = client.sell_limit(symbol, quantity, TARGET_PRICE)
@@ -144,7 +144,7 @@ def action(symbol):
     
     TARGET_PRICE = sellPrice
 
-    if ORDER_ID is None:
+    if ORDER_ID is 0:
 
         print 'price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f BTC:$%.1f' % (lastPrice, buyPrice, sellPrice, lastBid, lastAsk, btcPrice)
 
@@ -177,15 +177,16 @@ def action(symbol):
             #if the profit is lost, cancel order
             else:
                 
-                print "%s Cancel order3" % (ORDER_ID)
+                print "%s Cancel order" % (ORDER_ID)
                 
                 cancel_order(symbol, ORDER_ID)
                 
-                #Reset order id
+                # Reset order
                 ORDER_ID = None
+                open('ORDER', 'w').write(" ")
 
 def main():
-    
+   
     symbol = option.symbol
 
     print "@yasinkuyu, 2017"
@@ -193,7 +194,7 @@ def main():
     
     name = raw_input()
     
-    print "trader.py --quantity %s --symbol %s --profit %s --wait_time %s \n" % (option.quantity, option.symbol, option.profit, option.wait_time)
+    print "trader.py --quantity %s --symbol %s --profit %s --wait_time %s --orderid %s \n" % (option.quantity, option.symbol, option.profit, option.wait_time, option.orderid)
     
     if name != "":
         symbol = name

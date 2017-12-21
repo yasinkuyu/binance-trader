@@ -41,20 +41,18 @@ This is an experimental bot for auto trading the binance.com exchange.
     
     With option parameters
 
-    python trader.py --quantity 3 --symbol IOTABTC --profit 1.3 --wait_time 3 --orderid None
+    python trader.py --quantity 3 --symbol IOTABTC --profit 1.3 --wait_time 3 --orderid 0
     
     --quantity     Buy/Sell Quantity (default 3)
     --symbol       Market Symbol (Ex: IOTABTC) (default: IOTABTC)
     --profit       Target Profit (default 1.3)
-    --orderid      Target Order Id (default None)
+    --orderid      Target Order Id (default 0)
     --testmode     Test Mode True/False (default False)
-    --wait_time    Wait Time (default 3)
-    
-    Behind...
-    
+    --wait_time    Wait Time (seconds) (default 3)
+
     Enter your Cryptocurrency symbol. Ex: IOTABTC
-    (All binance symbols are supported.)
-     
+    All binance symbols are supported.
+ 
 ## DISCLAIMER
 
     I am not responsible for anything done with this bot. 
