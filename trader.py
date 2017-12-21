@@ -4,26 +4,29 @@
 import sys
 import time
 import config
+import argparse
 
 from BinanceAPI import *
 
-# trader.py --quantity --symbol --profit --wait_time
-# ex: trader.py 1 IOTABTC 1.3 1
+parser = argparse.ArgumentParser()
+parser.add_argument("--quantity", type=int, help="Buy/Sell Quantity", default=3)
+parser.add_argument("--symbol", type=str, help="Market Symbol (Ex: IOTABTC)", default='IOTABTC')
+parser.add_argument("--profit", type=int, help="Target Profit", default=1.3)
+parser.add_argument("--orderid", type=int, help="Target Order Id", default=None)
+parser.add_argument("--testmode", type=bool, help="Test Mode True/False", default=False)
+parser.add_argument("--wait_time", type=int, help="Wait Time (seconds)", default=3)
 
-#int(sys.argv[0]) #quantity
-#sys.argv[1] #symbol
-#sys.argv[2] #percentage of profit
-#sys.argv[3] #wait_time
+option = parser.parse_args()
 
-TEST_MODE = False
+TEST_MODE = option.testmode
 
-PROFIT = 1.3 #percentage of profit
-ORDER_ID = None
+PROFIT = option.profit
+ORDER_ID = option.orderid
+QUANTITY = option.quantity
+WAIT_TIME = option.wait_time  # seconds
 TARGET_PRICE = 0
-QUANTITY = 2
 INCREASING = 0.00000001
 TARGET_PROFITABLE_PRICE = None
-WAIT_TIME = 3  # default 3 seconds
 
 client = BinanceAPI(config.api_key, config.api_secret)
 
@@ -182,17 +185,20 @@ def action(symbol):
                 ORDER_ID = None
 
 def main():
-    symbol = 'IOTABTC'
+    
+    symbol = option.symbol
 
     print "@yasinkuyu, 2017"
     print "Auto Trading for Binance.com (Beta). Enter your symbol. Ex: %s" % symbol
     
     name = raw_input()
-
+    
+    print "trader.py --quantity %s --symbol %s --profit %s --wait_time %s \n" % (option.quantity, option.symbol, option.profit, option.wait_time)
+    
     if name != "":
         symbol = name
     
-    print '%%%s profit scanning for %s' % (PROFIT, symbol)
+    print '%%%s profit scanning for %s \n' % (PROFIT, symbol)
     
     if TEST_MODE:
         print "Test mode active"
