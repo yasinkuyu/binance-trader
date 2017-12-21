@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 # @yasinkuyu
 
+import os
 import sys
 import time
 import config
@@ -30,6 +31,10 @@ TARGET_PROFITABLE_PRICE = None
 
 client = BinanceAPI(config.api_key, config.api_secret)
 
+def write(data):
+    file = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ORDER'), 'w')
+    file.write(data)
+    
 def buy_limit(symbol, quantity, buyPrice):
     global TEST_MODE
     
@@ -42,8 +47,7 @@ def buy_limit(symbol, quantity, buyPrice):
 
     orderId = ret['orderId']
     
-    file = open("ORDER", "w") 
-    file.write("{}\n".format([symbol, orderId, quantity, buyPrice]))
+    write("{}\n".format([symbol, orderId, quantity, buyPrice]))
     
     print "******************"
     print 'Order Id: %d' % orderId
