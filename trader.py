@@ -10,7 +10,7 @@ import argparse
 from BinanceAPI import *
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--quantity", type=int, help="Buy/Sell Quantity", default=3)
+parser.add_argument("--quantity", type=int, help="Buy/Sell Quantity", default=6)
 parser.add_argument("--symbol", type=str, help="Market Symbol (Ex: IOTABTC)", default='IOTABTC')
 parser.add_argument("--profit", type=float, help="Target Profit", default=1.3)
 parser.add_argument("--orderid", type=int, help="Target Order Id", default=0)
