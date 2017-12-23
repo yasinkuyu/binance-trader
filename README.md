@@ -21,6 +21,7 @@ This is an experimental bot for auto trading the binance.com exchange.
         api_secret = ''
 
         API Docs: https://www.binance.com/restapipub.html
+8. Optional: run as an excutable application in Docker containers
 
 
 ## Requirements
@@ -52,6 +53,12 @@ This is an experimental bot for auto trading the binance.com exchange.
 
     Enter your Cryptocurrency symbol. Ex: IOTABTC
     All binance symbols are supported.
+
+## Run in a Docker container
+
+    docker build -t trader .
+
+    docker run trader
  
 ## DISCLAIMER
 
