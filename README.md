@@ -11,9 +11,10 @@ This is an experimental bot for auto trading the binance.com exchange.
 2. Enable Two-factor Authentication    
 3. Go API Center, https://www.binance.com/userCenter/createApi.html
 4. Create New Key
-   [✓] Read Info [✓] Enable Trading [X] Enable Withdrawals 
-6. Rename config.sample.py to config.py
-7. Get an API and Secret Key, insert into config.py
+
+        [✓] Read Info [✓] Enable Trading [X] Enable Withdrawals 
+5. Rename config.sample.py to config.py
+6. Get an API and Secret Key, insert into config.py
 
         API key for account access
         api_key = ''
@@ -21,7 +22,7 @@ This is an experimental bot for auto trading the binance.com exchange.
         api_secret = ''
 
         API Docs: https://www.binance.com/restapipub.html
-8. Optional: run as an excutable application in Docker containers
+7. Optional: run as an excutable application in Docker containers
 
 
 ## Requirements
@@ -45,7 +46,7 @@ This is an experimental bot for auto trading the binance.com exchange.
     python trader.py --quantity 6 --symbol IOTABTC --profit 1.3 --wait_time 3 --orderid 0
     
     --quantity     Buy/Sell Quantity (default 6)
-    --symbol       Market Symbol (Ex: IOTABTC) (default: IOTABTC)
+    --symbol       Market Symbol (default IOTABTC)
     --profit       Target Profit (default 1.3)
     --orderid      Target Order Id (default 0)
     --testmode     Test Mode True/False (default False)
