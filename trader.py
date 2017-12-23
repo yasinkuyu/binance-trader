@@ -187,7 +187,8 @@ def action(symbol):
                 
                 # Reset order
                 ORDER_ID = None
-                open('ORDER', 'w').write(" ")
+                #empty ORDER file
+                write(" ") 
 
 def main():
    
