@@ -198,11 +198,11 @@ def main():
     print ("Auto Trading for Binance.com (Beta). Enter your symbol. Ex: %s" % symbol)
     
     name = raw_input()
-    
-    print ("trader.py --quantity %s --symbol %s --profit %s --wait_time %s --orderid %s \n" % (option.quantity, option.symbol, option.profit, option.wait_time, option.orderid))
-    
+        
     if name != "":
         symbol = name
+    
+    print ("trader.py --quantity %s --symbol %s --profit %s --wait_time %s --orderid %s \n" % (option.quantity, symbol, option.profit, option.wait_time, option.orderid))
     
     print ('%%%s profit scanning for %s \n' % (PROFIT, symbol))
     
