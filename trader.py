@@ -49,8 +49,8 @@ def buy_limit(symbol, quantity, buyPrice):
     
     write("{}\n".format([symbol, orderId, quantity, buyPrice]))
     
-    print "******************"
-    print 'Order Id: %d' % orderId
+    print ("******************")
+    print ('Order Id: %d' % orderId)
 
     return orderId
 
@@ -64,7 +64,7 @@ def sell_limit(symbol, quantity, orderId):
     if 'msg' in ret:
         errexit(ret['msg'])
 
-    print "Orders"
+    print ("Orders")
 
     for order in ret:
         price = float(order['price'])
@@ -72,22 +72,22 @@ def sell_limit(symbol, quantity, orderId):
         executedQty = float(order['executedQty'])
 
         if order['orderId'] == orderId:
-            print "Order: %d: %lf\t%lf\t%lf" % (order['orderId'], price, origQty, executedQty)
+            print ("Order: %d: %lf\t%lf\t%lf" % (order['orderId'], price, origQty, executedQty))
      
             TARGET_PROFITABLE_PRICE = None
             ORDER_ID = 0
 
             if not TEST_MODE:
                 ret = client.sell_limit(symbol, quantity, TARGET_PRICE)
-                print 'Sales were made at %s price.' % (TARGET_PRICE)
-                print '---------------------------------------------'
+                print ('Sales were made at %s price.' % (TARGET_PRICE))
+                print ('---------------------------------------------')
 
                 if 'msg' in ret:
                     errexit(ret['msg'])
 
-                print ret
+                print (ret)
             else:
-                print "Order Id: %s. The test order is complete. Price %s" % (orderId, TARGET_PRICE)
+                print ("Order Id: %s. The test order is complete. Price %s" % (orderId, TARGET_PRICE))
                 
 def cancel_order(symbol, orderId):
     global TEST_MODE
@@ -99,7 +99,7 @@ def cancel_order(symbol, orderId):
             if 'msg' in ret:
                 errexit(ret['msg'])
 
-        print 'Order has been canceled.'
+        print ('Order has been canceled.')
 
 def check_order(symbol, orderId):
 
@@ -109,10 +109,10 @@ def check_order(symbol, orderId):
 
     #Canceled #Filled #Partial Fill
     if ret['status'] != "CANCELED":
-        print "%s Order complated. Try sell..." % (orderId)
+        print ("%s Order complated. Try sell..." % (orderId))
         return True
         
-    print "%s Order is open..." % (orderId)
+    print ("%s Order is open..." % (orderId))
     return False
    
 def get_ticker(symbol):
@@ -150,7 +150,7 @@ def action(symbol):
 
     if ORDER_ID is 0:
 
-        print 'price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f BTC:$%.1f' % (lastPrice, buyPrice, sellPrice, lastBid, lastAsk, btcPrice)
+        print ('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f BTC:$%.1f' % (lastPrice, buyPrice, sellPrice, lastBid, lastAsk, btcPrice))
 
         # Did profit get caught
         if lastAsk >= profitablePrice:
@@ -159,8 +159,8 @@ def action(symbol):
 
             ORDER_ID = buy_limit(symbol, QUANTITY, buyPrice)
 
-            print "Percentage of %s profit. Order created from %.8f. Profit: %.8f BTC" % (PROFIT, sellPrice, earnTotal)
-            print "#####################"
+            print ("Percentage of %s profit. Order created from %.8f. Profit: %.8f BTC" % (PROFIT, sellPrice, earnTotal))
+            print ("#####################")
 
         else:
 
@@ -174,14 +174,14 @@ def action(symbol):
             # Did profit get caught
             if lastAsk >= TARGET_PROFITABLE_PRICE:
  
-                print "Target sell price: %.8f " % TARGET_PROFITABLE_PRICE 
+                print ("Target sell price: %.8f " % TARGET_PROFITABLE_PRICE)
                 
                 sell_limit(symbol, QUANTITY, ORDER_ID)
                 
             #if the profit is lost, cancel order
             else:
                 
-                print "%s Cancel order" % (ORDER_ID)
+                print ("%s Cancel order" % (ORDER_ID))
                 
                 cancel_order(symbol, ORDER_ID)
                 
@@ -193,20 +193,20 @@ def main():
    
     symbol = option.symbol
 
-    print "@yasinkuyu, 2017"
-    print "Auto Trading for Binance.com (Beta). Enter your symbol. Ex: %s" % symbol
+    print ("@yasinkuyu, 2017")
+    print ("Auto Trading for Binance.com (Beta). Enter your symbol. Ex: %s" % symbol)
     
     name = raw_input()
     
-    print "trader.py --quantity %s --symbol %s --profit %s --wait_time %s --orderid %s \n" % (option.quantity, option.symbol, option.profit, option.wait_time, option.orderid)
+    print ("trader.py --quantity %s --symbol %s --profit %s --wait_time %s --orderid %s \n" % (option.quantity, option.symbol, option.profit, option.wait_time, option.orderid))
     
     if name != "":
         symbol = name
     
-    print '%%%s profit scanning for %s \n' % (PROFIT, symbol)
+    print ('%%%s profit scanning for %s \n' % (PROFIT, symbol))
     
     if TEST_MODE:
-        print "Test mode active"
+        print ("Test mode active")
     
     while True:
         
