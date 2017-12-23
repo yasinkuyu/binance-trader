@@ -1,7 +1,14 @@
 import time
 import hashlib
 import requests
-from urllib import urlencode
+
+try:
+    from urllib import urlencode
+except ImportError:
+    from urllib.parse import urlencode
+
+#from urllib.parse import urlencode
+#from urllib import urlencode
 #https://github.com/purboox/BinanceAPI
 
 class BinanceAPI:
