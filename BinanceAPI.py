@@ -46,7 +46,7 @@ class BinanceAPI:
         path = "%s/order" % self.BASE_URL
         params = {"symbol": market, "side": "BUY", \
             "type": "LIMIT", "timeInForce": "GTC", \
-            "quantity": quantity, "price": rate}
+            "quantity": quantity, "price": '%.8f' % rate}
         return self._post(path, params)
 
 
@@ -54,7 +54,7 @@ class BinanceAPI:
         path = "%s/order" % self.BASE_URL
         params = {"symbol": market, "side": "SELL", \
             "type": "LIMIT", "timeInForce": "GTC", \
-            "quantity": quantity, "price": rate}
+            "quantity": quantity, "price": '%.8f' % rate}
         return self._post(path, params)
 
 
