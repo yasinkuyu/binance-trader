@@ -51,6 +51,8 @@ This is an experimental bot for auto trading the binance.com exchange.
     --orderid      Target Order Id (default 0)
     --testmode     Test Mode True/False (default False)
     --wait_time    Wait Time (seconds) (default 3)
+    --increasing   Buy Price Increasing  +(default 0.00000001)
+    --decreasing   Sell Price Decreasing -(default 0.00000001)
 
     Enter your Cryptocurrency symbol. Ex: IOTABTC
     All binance symbols are supported.
@@ -83,7 +85,12 @@ This is an experimental bot for auto trading the binance.com exchange.
     
 ## Roadmap
 
-    - Order tracking
+    - Order tracking (list open orders)
+    - Symbol check balance 
+    - Find best sell price
+    - MACD Indicator (buy/sell)
+    - Stop-Loss Implementation
+    - Maximum (open) order limit
     - Binance/Bittrex/HitBTC/Liqui Arbitrage  
 
 ---
