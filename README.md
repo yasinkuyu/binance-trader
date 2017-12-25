@@ -54,9 +54,23 @@ This is an experimental bot for auto trading the binance.com exchange.
     --increasing   Buy Price Increasing  +(default 0.00000001)
     --decreasing   Sell Price Decreasing -(default 0.00000001)
 
-    Enter your Cryptocurrency symbol. Ex: IOTABTC
-    All binance symbols are supported.
+    Symbol structure;
+        XXXBTC  (Bitcoin)
+        XXXETH  (Ethereum)
+        XXXBNB  (Binance Coin)
+        XXXUSDT (Tether)
 
+    All binance symbols are supported.
+    
+    Every coin can be different in --profit and --quantity.
+    Total must be at least 0.001 
+    
+    Variations;
+        trader.py --symbol TBNBTC --quantity 50 --profit 3
+        trader.py --symbol NEOBTC --quantity 3 --profit 1.1
+        trader.py --symbol ETHUSDT --quantity 0.3 --profit 1.5
+        ...
+    
 ## Run in a Docker container
 
     docker build -t trader .
