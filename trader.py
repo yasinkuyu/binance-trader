@@ -16,6 +16,8 @@ parser.add_argument("--profit", type=float, help="Target Profit", default=1.3)
 parser.add_argument("--orderid", type=int, help="Target Order Id", default=0)
 parser.add_argument("--testmode", type=bool, help="Test Mode True/False", default=False)
 parser.add_argument("--wait_time", type=int, help="Wait Time (seconds)", default=3)
+parser.add_argument("--increasing", type=float, help="Buy Price +Increasing (0.00000001)", default=0.00000001)
+parser.add_argument("--decreasing", type=float, help="Sell Price -Decreasing (0.00000001)", default=0.00000001)
 
 option = parser.parse_args()
 
@@ -26,7 +28,6 @@ ORDER_ID = option.orderid
 QUANTITY = option.quantity
 WAIT_TIME = option.wait_time  # seconds
 TARGET_PRICE = 0
-INCREASING = 0.00000001
 TARGET_PROFITABLE_PRICE = None
 
 client = BinanceAPI(config.api_key, config.api_secret)
@@ -122,7 +123,7 @@ def get_ticker(symbol):
 def errexit(msg):
     print("Error: " + msg)
     exit(1)
-   
+     
 def action(symbol):
     
     global ORDER_ID
@@ -136,13 +137,13 @@ def action(symbol):
     lastPrice = get_ticker(symbol)
 
     ret = client.get_orderbooks(symbol, 5)
-    lastBid = float(ret['bids'][0][0])
-    lastAsk = float(ret['asks'][0][0])
+    lastBid = float(ret['bids'][0][0]) #last buy price
+    lastAsk = float(ret['asks'][0][0]) #last sell price
     
     btcPrice = get_ticker("BTCUSDT")
-    buyPrice = lastBid + INCREASING
-    sellPrice = lastAsk - INCREASING
-    profitablePrice = buyPrice + (buyPrice * PROFIT / 100)
+    buyPrice = lastBid + option.increasing #target buy price
+    sellPrice = lastAsk - option.decreasing #target sell price
+    profitablePrice = buyPrice + (buyPrice * PROFIT / 100) #spread
 
     earnTotal = sellPrice - buyPrice
     
