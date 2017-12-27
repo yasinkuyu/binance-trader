@@ -1,6 +1,6 @@
+# @plgonzalezrx8
 
-# @yasinkuyu
-
+**/env
 config.py
 buysell2.py
 buysell.py
@@ -10,4 +10,4 @@ functions.py
 *.pyc
 .pyc
 .DS_Store
-.gitignore	
+.gitignore
