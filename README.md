@@ -109,10 +109,10 @@ This is an experimental bot for auto trading the binance.com exchange.
 
 ## Failure
 
-Filter failure: MIN_NOTIONAL
-https://support.binance.com/hc/en-us/articles/115000594711-Trading-Rule
+    Filter failure: MIN_NOTIONAL
+    https://support.binance.com/hc/en-us/articles/115000594711-Trading-Rule
 
-Filter failure: PRICE_FILTER
-https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md
+    Filter failure: PRICE_FILTER
+    https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md
 
 ---
