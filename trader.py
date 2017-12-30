@@ -10,7 +10,7 @@ import argparse
 from BinanceAPI import *
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--quantity", type=int, help="Buy/Sell Quantity", default=6)
+parser.add_argument("--quantity", type=float, help="Buy/Sell Quantity", default=6)
 parser.add_argument("--symbol", type=str, help="Market Symbol (Ex: IOTABTC)", default='IOTABTC')
 parser.add_argument("--profit", type=float, help="Target Profit", default=1.3)
 parser.add_argument("--orderid", type=int, help="Target Order Id", default=0)
@@ -27,8 +27,7 @@ PROFIT = option.profit
 ORDER_ID = option.orderid
 QUANTITY = option.quantity
 WAIT_TIME = option.wait_time  # seconds
-TARGET_PRICE = 0
-TARGET_PROFITABLE_PRICE = None
+WAIT_TIME_SELL = 4  # seconds
 
 client = BinanceAPI(config.api_key, config.api_secret)
 
@@ -44,155 +43,152 @@ def buy_limit(symbol, quantity, buyPrice):
     
     ret = client.buy_limit(symbol, quantity, buyPrice)
     if 'msg' in ret:
-        errexit(ret['msg'])
-
+        message(ret['msg'])
+    
+    #Order created.
     orderId = ret['orderId']
     
-    write("{}\n".format([symbol, orderId, quantity, buyPrice]))
+    write("%s,%d,%lf,%lf" % (symbol, orderId, quantity, buyPrice))
     
-    print ("******************")
     print ('Order Id: %d' % orderId)
 
     return orderId
 
-def sell_limit(symbol, quantity, orderId):
+def sell_limit(symbol, orderId, lastPrice, sell_price):
     global TEST_MODE
-    global ORDER_ID
-    global TARGET_PRICE
-    global TARGET_PROFITABLE_PRICE
+
+    if TEST_MODE:
+        print ("Test sell price: %.8f " % sell_price)
+        return 0
+
+    # Get active order info
+    order = get_order(symbol, orderId)
     
-    ret = client.get_open_orders(symbol)
-    if 'msg' in ret:
-        errexit(ret['msg'])
-
-    print ("Orders")
-
-    for order in ret:
-        price = float(order['price'])
-        origQty = float(order['origQty'])
-        executedQty = float(order['executedQty'])
-
-        if order['orderId'] == orderId:
-            print ("Order: %d: %lf\t%lf\t%lf" % (order['orderId'], price, origQty, executedQty))
-     
-            TARGET_PROFITABLE_PRICE = None
-            ORDER_ID = 0
-
-            if not TEST_MODE:
-                ret = client.sell_limit(symbol, quantity, TARGET_PRICE)
-                print ('Sales were made at %s price.' % (TARGET_PRICE))
-                print ('---------------------------------------------')
-
-                if 'msg' in ret:
-                    errexit(ret['msg'])
-
-                print (ret)
-            else:
-                print ("Order Id: %s. The test order is complete. Price %s" % (orderId, TARGET_PRICE))
-                
-def cancel_order(symbol, orderId):
-    global TEST_MODE
+    # Sell price
+    price = float(order['price'])
     
-    if orderId is not None:
+    filled_qty = float(order['executedQty'])
+    
+    # Todo: check filled or remaining qty.
+    quantity = float(order['origQty']) #executedQty
 
-        if not TEST_MODE:
-            ret = client.cancel(symbol, orderId)
+    print ("Order(buy): %s %d: %.8f" % (symbol, order['orderId'], price))
+
+    #Wait 4 seconds to be sold.
+    time.sleep(WAIT_TIME_SELL)
+    
+    # Did profit get caught
+    if sell_price >= lastPrice:
+
+        if filled_qty > 0:
+            ret = client.sell_limit(symbol, filled_qty, sell_price)
+    
+            print ("Sales were made at %.8f price." % (sell_price))
+
             if 'msg' in ret:
-                errexit(ret['msg'])
+                message(ret['msg'])
+    
+            print ("symbol: %.8f executedQty: %.8f origQty: %.8f" % (ret['symbol'], ret['executedQty'], ret['origQty']))
+        
+        else:
+            
+            print ("Wait fill/partial fill. filledQty: %s " % (filled_qty))
+        
+    else:
 
-        print ('Order has been canceled.')
+        cancel_order(symbol, ORDER_ID)
 
-def check_order(symbol, orderId):
+        # Reset order id
+        ORDER_ID = 0
+    
+        # Empty ORDER file
+        write(" ")                        
+                  
+def cancel_order(symbol, orderId):
+
+    ret = client.cancel(symbol, orderId)
+    if 'msg' in ret:
+        message(ret['msg'])
+
+def get_order(symbol, orderId):
 
     ret = client.query_order(symbol, orderId)
     if 'msg' in ret:
-        errexit(ret['msg'])
+        message(ret['msg'])
+        return False
 
-    #Canceled #Filled #Partial Fill
+    # Canceled #Filled #Partial Fill
     if ret['status'] != "CANCELED":
-        print ("%s Order complated. Try sell..." % (orderId))
-        return True
-        
-    print ("%s Order is open..." % (orderId))
-    return False
-   
+        return ret
+ 
 def get_ticker(symbol):
     ret = client.get_ticker(symbol)
     return float(ret["lastPrice"])
 
-def errexit(msg):
-    print("Error: " + msg)
+def message(msg):
+    print ("Error: " + msg)
     exit(1)
-     
+    
+def calc(lastBid):
+    return lastBid + (lastBid * PROFIT / 100)
+      
 def action(symbol):
     
     global ORDER_ID
-    global QUANTITY
-    global TARGET_PRICE
-    global TARGET_PROFITABLE_PRICE
     
-    file = open("ORDER", "r") 
-    #print file.read() 
-    
-    lastPrice = get_ticker(symbol)
+    # Order amount
+    quantity = option.quantity
 
-    ret = client.get_orderbooks(symbol, 5)
-    lastBid = float(ret['bids'][0][0]) #last buy price
-    lastAsk = float(ret['asks'][0][0]) #last sell price
-    
+    lastPrice = get_ticker(symbol)
     btcPrice = get_ticker("BTCUSDT")
+    
+    ret = client.get_orderbooks(symbol, 5)
+    lastBid = float(ret['bids'][0][0]) #last buy price (bid)
+    lastAsk = float(ret['asks'][0][0]) #last sell price (ask)
+    
     buyPrice = lastBid + option.increasing #target buy price
     sellPrice = lastAsk - option.decreasing #target sell price
-    profitablePrice = buyPrice + (buyPrice * PROFIT / 100) #spread
-
-    earnTotal = sellPrice - buyPrice
     
-    TARGET_PRICE = sellPrice
-
+    # Spread 
+    profitableSellingPrice = calc(lastBid)
+    earnTotal = profitableSellingPrice - buyPrice
+     
     if ORDER_ID is 0:
 
-        print ('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f BTC:$%.1f' % (lastPrice, buyPrice, sellPrice, lastBid, lastAsk, btcPrice))
+        print ('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f BTC:$%.1f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, btcPrice))
 
         # Did profit get caught
-        if lastAsk >= profitablePrice:
-
-            TARGET_PROFITABLE_PRICE = profitablePrice
-
-            ORDER_ID = buy_limit(symbol, QUANTITY, buyPrice)
-
-            print ("Percentage of %s profit. Order created from %.8f. Profit: %.8f BTC" % (PROFIT, sellPrice, earnTotal))
-            print ("#####################")
-
-        else:
-
-            TARGET_PROFITABLE_PRICE = None
+        if lastAsk >= profitableSellingPrice:
             
+            try:
+
+                ORDER_ID = buy_limit(symbol, quantity, buyPrice)
+
+                print ("Percentage of %s profit. Order created from %.8f. Earn: %.8f satoshi" % (PROFIT, buyPrice, earnTotal))
+
+            except:
+                print ("... buy try again...")
+
     else:
         
-        # If the order is complete, try to sell it.
-        if check_order(symbol, ORDER_ID):
-            
-            # Did profit get caught
-            if lastAsk >= TARGET_PROFITABLE_PRICE:
+        try:
  
-                print ("Target sell price: %.8f " % TARGET_PROFITABLE_PRICE)
-                
-                sell_limit(symbol, QUANTITY, ORDER_ID)
-                
-            #if the profit is lost, cancel order
-            else:
-                
-                print ("%s Cancel order" % (ORDER_ID))
-                
-                cancel_order(symbol, ORDER_ID)
-                
-                # Reset order
-                ORDER_ID = None
-                #empty ORDER file
-                write(" ") 
+            # Order information will be kept on file
+            file = open("ORDER", "r") 
+            data = file.read().split(',')
+            
+            profitableSellingPrice_file = calc(data[3]) #stored buyPrice
+            
+            # If the order is complete, try to sell it.
+            ORDER_ID = sell_limit(symbol, ORDER_ID, lastPrice, profitableSellingPrice_file)
 
+            print ("Profit is lost, order canceled %s" % (ORDER_ID))
+
+        except:
+            print ("... sell try again...")
+        
 def main():
-   
+ 
     symbol = option.symbol
 
     print ("@yasinkuyu, 2017")
