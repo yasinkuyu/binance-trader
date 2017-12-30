@@ -3,7 +3,7 @@
 
 This is an experimental bot for auto trading the binance.com exchange.
 
-[![asciicast](https://asciinema.org/a/xd44F4tOvRmKnt9bcXrUwCVo3.png)](https://asciinema.org/a/xd44F4tOvRmKnt9bcXrUwCVo3)
+![Screenshot](https://github.com/yasinkuyu/binance-trader/blob/master/screenshot.png)
 
 ## Configuration
 
@@ -106,5 +106,13 @@ This is an experimental bot for auto trading the binance.com exchange.
     - Stop-Loss Implementation
     - Maximum (open) order limit
     - Binance/Bittrex/HitBTC/Liqui Arbitrage  
+
+## Failure
+
+    Filter failure: MIN_NOTIONAL
+    https://support.binance.com/hc/en-us/articles/115000594711-Trading-Rule
+
+    Filter failure: PRICE_FILTER
+    https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md
 
 ---

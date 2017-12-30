@@ -13,6 +13,7 @@ except ImportError:
 
 class BinanceAPI:
     BASE_URL = "https://www.binance.com/api/v1"
+    BASE_URL_V = "https://api.binance.com/api/v3/"
 
     def __init__(self, key, secret):
         self.key = key
@@ -46,7 +47,7 @@ class BinanceAPI:
         path = "%s/order" % self.BASE_URL
         params = {"symbol": market, "side": "BUY", \
             "type": "LIMIT", "timeInForce": "GTC", \
-            "quantity": quantity, "price": '%.8f' % rate}
+            "quantity": '%.8f' % quantity, "price": '%.8f' % rate}
         return self._post(path, params)
 
 
@@ -54,21 +55,21 @@ class BinanceAPI:
         path = "%s/order" % self.BASE_URL
         params = {"symbol": market, "side": "SELL", \
             "type": "LIMIT", "timeInForce": "GTC", \
-            "quantity": quantity, "price": '%.8f' % rate}
+            "quantity": '%.8f' % quantity, "price": '%.8f' % rate}
         return self._post(path, params)
 
 
     def buy_market(self, market, quantity):
         path = "%s/order" % self.BASE_URL
         params = {"symbol": market, "side": "BUY", \
-            "type": "MARKET", "quantity": quantity}
+            "type": "MARKET", "quantity": '%.8f' % quantity}
         return self._post(path, params)
 
 
     def sell_market(self, market, quantity):
         path = "%s/order" % self.BASE_URL
         params = {"symbol": market, "side": "SELL", \
-            "type": "MARKET", "quantity": quantity}
+            "type": "MARKET", "quantity": '%.8f' % quantity}
         return self._post(path, params)
 
 
