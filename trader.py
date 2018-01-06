@@ -119,7 +119,7 @@ def sell_limit(symbol, quantity, orderId, sell_price, last_price):
         if 'msg' in order:
             message(order['msg'])
        
-        print ("Profit: %%%s. Buy: %.8f Sell: %.8f" % (PROFIT, order["price"], sell_price))
+        print ("Profit: %%%s. Buy: %.8f Sell: %.8f" % (PROFIT, float(order["price"]), sell_price))
                         
         sell_id = order['orderId']
     
