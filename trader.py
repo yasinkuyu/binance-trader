@@ -119,7 +119,7 @@ def sell_limit(symbol, quantity, orderId, sell_price, last_price):
         if 'msg' in order:
             message(order['msg'])
        
-        print ("Profit: %%%s. Buy: %.8f Sell: %.8f" % (PROFIT, buyPrice, sell_price))
+        print ("Profit: %%%s. Buy: %.8f Sell: %.8f" % (PROFIT, order["price"], sell_price))
                         
         sell_id = order['orderId']
     
@@ -209,7 +209,7 @@ def check_buy(symbol, orderId, quantity):
             
             if cancel_order(symbol, orderId) == True:
             
-                buy = client.market_buy(symbol, quantity)
+                buy = client.buy_market(symbol, quantity)
                   
                 if 'msg' in buy:
                     message(buy['msg'])
@@ -304,6 +304,13 @@ def message(msg):
     
 def calc(lastBid):
     return lastBid + (lastBid * PROFIT / 100)
+
+def valid(price):
+    try:
+        price = float(price) + option.increasing
+    except ValueError:
+        print ("Invalid symbol name, Please try again....")
+        exit(1)
     
 def action(symbol):
         
