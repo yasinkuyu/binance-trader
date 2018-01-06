@@ -1,4 +1,4 @@
-# Binance Trader (Beta)
+# Binance Trader (RC)
 @yasinkuyu - 2017
 
 This is an experimental bot for auto trading the binance.com exchange.
@@ -24,7 +24,6 @@ This is an experimental bot for auto trading the binance.com exchange.
         API Docs: https://www.binance.com/restapipub.html
 7. Optional: run as an excutable application in Docker containers
 
-
 ## Requirements
 
     sudo easy_install -U requests
@@ -32,27 +31,31 @@ This is an experimental bot for auto trading the binance.com exchange.
     sudo pip install requests
     
     Python 2.7
+        import os
         import sys
         import time
         import config
         import argparse
+        import threading
+        import sqlite3
 
 ## Usage
 
-    python trader.py 
+    python trader.py --symbol XVNBTC
     
     With option parameters
 
-    python trader.py --quantity 6 --symbol IOTABTC --profit 1.3 --wait_time 3 --orderid 0
+    python trader.py --symbol XVNBTC --quantity 200 --profit 1.3 --loop 0 --orderid 0
     
-    --quantity     Buy/Sell Quantity (default 6)
-    --symbol       Market Symbol (default IOTABTC)
+    --quantity     Buy/Sell Quantity (default 200)
+    --symbol       Market Symbol (default XVNBTC)
     --profit       Target Profit (default 1.3)
     --orderid      Target Order Id (default 0)
-    --testmode     Test Mode True/False (default False)
-    --wait_time    Wait Time (seconds) (default 3)
+    --wait_time    Wait Time (seconds) (default 1)
     --increasing   Buy Price Increasing  +(default 0.00000001)
     --decreasing   Sell Price Decreasing -(default 0.00000001)
+    --prints       Scanning Profit Screen Print (default True)
+    --loop         Loop (default 0 unlimited)
 
     Symbol structure;
         XXXBTC  (Bitcoin)
@@ -63,7 +66,7 @@ This is an experimental bot for auto trading the binance.com exchange.
     All binance symbols are supported.
     
     Every coin can be different in --profit and --quantity.
-    Total must be at least 0.001 
+    Total must be at least 0.002 
     
     Variations;
         trader.py --symbol TBNBTC --quantity 50 --profit 3
@@ -84,10 +87,6 @@ This is an experimental bot for auto trading the binance.com exchange.
     There are no warranties or guarantees expressed or implied. 
     You assume all responsibility and liability.
      
-## License
-
-    Code released under the MIT License.
-
 ## Contributing
 
     Fork this Repo
@@ -97,16 +96,6 @@ This is an experimental bot for auto trading the binance.com exchange.
     
     Thanks all for your contributions...
     
-## Roadmap
-
-    - Order tracking (list open orders)
-    - Symbol check balance 
-    - Find best sell price
-    - MACD Indicator (buy/sell)
-    - Stop-Loss Implementation
-    - Maximum (open) order limit
-    - Binance/Bittrex/HitBTC/Liqui Arbitrage  
-
 ## Failure
 
     Filter failure: MIN_NOTIONAL
@@ -114,5 +103,23 @@ This is an experimental bot for auto trading the binance.com exchange.
 
     Filter failure: PRICE_FILTER
     https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md
+    
+## Roadmap
+
+    - MACD indicator (buy/sell)
+    - Stop-Loss implementation
+    - Binance/Bittrex/HitBTC Arbitrage  
+    
+    ...
+    
+    - October 7, 2017 Beta
+    - January 6, 2018 RC
+     
+## License
+
+    Code released under the MIT License.
+
+#### Tip Box
+[Wallets](http://yasinkuyu.net/wallet) 
 
 ---
