@@ -41,14 +41,14 @@ This is an experimental bot for auto trading the binance.com exchange.
 
 ## Usage
 
-    python trader.py --symbol XVNBTC
+    python trader.py --symbol XVGBTC
     
     With option parameters
 
-    python trader.py --symbol XVNBTC --quantity 200 --profit 1.3 --loop 0 --orderid 0
+    python trader.py --symbol XVGBTC --quantity 200 --profit 1.3 --loop 0 --orderid 0
     
     --quantity     Buy/Sell Quantity (default 200)
-    --symbol       Market Symbol (default XVNBTC)
+    --symbol       Market Symbol (default XVGBTC)
     --profit       Target Profit (default 1.3)
     --orderid      Target Order Id (default 0)
     --wait_time    Wait Time (seconds) (default 1)
