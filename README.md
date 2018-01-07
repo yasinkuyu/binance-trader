@@ -7,7 +7,7 @@ This is an experimental bot for auto trading the binance.com exchange.
 
 ## Configuration
 
-1. Signup Binance ( Referral url: https://www.binance.com/?ref=10701111 )
+1. Signup Binance ( Referral url: https://www.binance.com/?ref=10701111 or https://launchpad.binance.com/register.html?ref=10701111 )
 2. Enable Two-factor Authentication    
 3. Go API Center, https://www.binance.com/userCenter/createApi.html
 4. Create New Key
