@@ -7,12 +7,13 @@ try:
 except ImportError:
     from urllib.parse import urlencode
  
-#https://github.com/purboox/BinanceAPI
+# https://github.com/purboox/BinanceAPI
 
 class BinanceAPI:
     
     BASE_URL = "https://www.binance.com/api/v1"
     BASE_URL_V3 = "https://api.binance.com/api/v3/"
+    PUBLIC_URL = "https://www.binance.com/exchange/public/product"
 
     def __init__(self, key, secret):
         self.key = key
@@ -46,6 +47,9 @@ class BinanceAPI:
     def get_account(self):
         path = "%s/account" % self.BASE_URL
         return self._get(path, {})
+
+    def get_products(self):
+        return requests.get(self.PUBLIC_URL, timeout=30, verify=True).json()
 
     def get_open_orders(self, market, limit = 100):
         path = "%s/openOrders" % self.BASE_URL
@@ -100,7 +104,7 @@ class BinanceAPI:
         data.update({"timestamp": ts})
 
         h = self.secret + "|" + urlencode(data)
-        signature = hashlib.sha256(h).hexdigest()
+        signature = hashlib.sha256(h.encode('utf-8')).hexdigest()
         data.update({"signature": signature})
         return data
 
@@ -112,7 +116,6 @@ class BinanceAPI:
         return requests.get(url, headers=header, \
             timeout=30, verify=True).json()
 
-
     def _post(self, path, params={}):
         params.update({"recvWindow": 120000})
         query = urlencode(self._sign(params))
@@ -120,7 +123,6 @@ class BinanceAPI:
         header = {"X-MBX-APIKEY": self.key}
         return requests.post(url, headers=header, \
             timeout=30, verify=True).json()
-
 
     def _delete(self, path, params={}):
         params.update({"recvWindow": 120000})
