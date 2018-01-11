@@ -56,6 +56,7 @@ This is an experimental bot for auto trading the binance.com exchange.
     --decreasing   Sell Price Decreasing -(default 0.00000001)
     --prints       Scanning Profit Screen Print (default True)
     --loop         Loop (default 0 unlimited)
+    --test_mode    Test mode (default False)
 
     Symbol structure;
         XXXBTC  (Bitcoin)
