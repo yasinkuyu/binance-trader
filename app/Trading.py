@@ -108,6 +108,9 @@ class Trading():
                    
                                 print ('Stop-loss, sell market, %s' % (lossprice))
                         
+                                self.order_id = sello['orderId']
+                                self.order_data = sello
+                                
                                 if sello == True:
                                     break
                                 else:
@@ -120,6 +123,8 @@ class Trading():
                             break
                     elif status == 'FILLED':
                         if order['status'] == 'FILLED':
+                            self.order_id = 0
+                            self.order_data = ""
                             break
                         print('Order filled')
                         break
@@ -138,6 +143,7 @@ class Trading():
         if invalidAttempts != 0:
             Orders.cancel_order(symbol, orderId)
             self.order_id = 0
+            self.order_data = None
     
     def check(self, symbol, orderId, quantity):
     
@@ -169,7 +175,7 @@ class Trading():
                     print ('Buy market order')
                 
                     self.order_id = buyo['orderId']
-                    self.order_date = buyo
+                    self.order_data = buyo
                                 
                     if buyo == True:
                         break
@@ -180,6 +186,10 @@ class Trading():
                     break
 
             elif status == 'FILLED':
+            
+                self.order_id = order['orderId']
+                self.order_data = order
+                
                 break
             elif status == 'PARTIALLY_FILLED':
                 break
@@ -236,7 +246,7 @@ class Trading():
             newLastBid, newLastAsk = Orders.get_order_book(symbol)
             newSellPrice = newLastAsk - self.option.decreasing 
             
-            # profit mode
+            # Profit mode
             if self.order_data is not None:
                 order = self.order_data;
             
@@ -257,6 +267,8 @@ class Trading():
             # Perform buy action
             sellAction = threading.Thread(target=self.sell, args=(symbol, quantity, self.order_id, newSellPrice, lastPrice,))
             sellAction.start()
+            
+            return
 
         '''
         Did profit get caught
@@ -302,15 +314,23 @@ class Trading():
         
         minQty = float(self.filters()['filters']['LOT_SIZE']['minQty'])
         minPrice = float(self.filters()['filters']['PRICE_FILTER']['minPrice'])
+        minNotional = float(self.filters()['filters']['MIN_NOTIONAL']['minNotional'])
         
-        price = lastPrice * quantity
+        price = lastPrice
+        notional = lastPrice * quantity
         
+        # minQty = minimum order quantity
         if quantity < minQty:
-            print ("Invalid quantity, minQty: %.8f" % (minQty))
+            print ("Invalid quantity, minQty: %.8f (u: %.8f)" % (minQty, quantity))
             valid = False
         
         if price < minPrice:
-            print ("Invalid price, minPrice: %.8f" % (minQty))
+            print ("Invalid price, minPrice: %.8f (u: %.8f)" % (minQty, price))
+            valid = False
+        
+        # minNotional = minimum order value (price * quantity)
+        if notional < minNotional:
+            print ("Invalid price, minNotional: %.8f (u: %.8f)" % (minNotional, notional))
             valid = False
         
         if not valid:
