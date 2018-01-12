@@ -1,13 +1,10 @@
 
-# @plgonzalezrx8
+# @yasinkuyu
+
+/app/config.py
+/db/orders.py
 
 **/env
-config.py
-buysell2.py
-buysell.py
-config.pyc
-BinanceAPI.pyc
-functions.py
 *.pyc
 .pyc
 .DS_Store
