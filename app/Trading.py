@@ -272,9 +272,49 @@ class Trading():
             # Perform check/sell action
             checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
             checkAction.start()
-        
+    
     def logic(self):
         return 0
+        
+    def filters(self):
+        
+        symbol = self.option.symbol
+
+        # Get symbol exchance info
+        symbol_info = Orders.get_info(symbol)
+        
+        if not symbol_info:
+            print ("Invalid symbol, please try again...")
+            exit(1)
+
+        symbol_info['filters'] = {item['filterType']: item for item in symbol_info['filters']}
+ 
+        return symbol_info
+    
+    def validate(self):
+        
+        symbol = self.option.symbol
+        
+        valid = True
+        quantity = float(self.option.quantity)
+        
+        lastPrice = Orders.get_ticker(symbol)
+        
+        minQty = float(self.filters()['filters']['LOT_SIZE']['minQty'])
+        minPrice = float(self.filters()['filters']['PRICE_FILTER']['minPrice'])
+        
+        price = lastPrice * quantity
+        
+        if quantity < minQty:
+            print ("Invalid quantity, minQty: %.8f" % (minQty))
+            valid = False
+        
+        if price < minPrice:
+            print ("Invalid price, minPrice: %.8f" % (minQty))
+            valid = False
+        
+        if not valid:
+            exit(1)
              
     def run(self):
         
@@ -286,6 +326,9 @@ class Trading():
         print ('@yasinkuyu, 2018')
         print ('Auto Trading for Binance.com. --symbol: %s\n' % symbol)
 
+        # Validate symbol
+        self.validate()
+        
         if self.option.mode == 'range':
 
            if self.option.buyprice == 0 or self.option.sellprice == 0:
@@ -295,7 +338,7 @@ class Trading():
            print ('Wait buyprice:%.8f sellprice:%.8f' % (self.option.buyprice, self.option.sellprice))
 
         else:
-           print ('%%%s profit scanning for %s\n' % (self.option.profit, symbol))
+           print ('%s%% profit scanning for %s\n' % (self.option.profit, symbol))
 
         print ('... \n')
 

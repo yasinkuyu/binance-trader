@@ -12,7 +12,7 @@ if __name__ == '__main__':
     
     # Set parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--quantity', type=int, help='Buy/Sell Quantity', default=200)
+    parser.add_argument('--quantity', type=float, help='Buy/Sell Quantity', default=200)
     parser.add_argument('--symbol', type=str, help='Market Symbol (Ex: XVGBTC)', required=True)
     parser.add_argument('--profit', type=float, help='Target Profit', default=1.3)
 

@@ -50,6 +50,10 @@ class BinanceAPI:
 
     def get_products(self):
         return requests.get(self.PUBLIC_URL, timeout=30, verify=True).json()
+        
+    def get_exchance_info(self):
+        path = "%s/exchangeInfo" % self.BASE_URL
+        return requests.get(path, timeout=30, verify=True).json()
 
     def get_open_orders(self, market, limit = 100):
         path = "%s/openOrders" % self.BASE_URL

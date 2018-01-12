@@ -124,4 +124,16 @@ class Orders():
             print ('gt: %s' % (e))
     
     
+    @staticmethod
+    def get_info(symbol):
+        try:        
     
+            info = client.get_exchance_info()
+            
+            if symbol != "":
+                return [market for market in info['symbols'] if market['symbol'] == symbol][0]
+ 
+            return info
+            
+        except Exception as e:
+            return
