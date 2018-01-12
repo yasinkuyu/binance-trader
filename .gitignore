@@ -2,7 +2,7 @@
 # @yasinkuyu
 
 /app/config.py
-/db/orders.py
+/db/orders.db
 
 **/env
 *.pyc
