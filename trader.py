@@ -31,7 +31,7 @@ if __name__ == '__main__':
     parser.add_argument('--debug', type=bool, help='Debug True/False', default=True)
     parser.add_argument('--loop', type=int, help='Loop (0 unlimited)', default=0)
 
-    # Working Modes  (Todo: Not complated)
+    # Working Modes
     #  - profit: Find defined profit, buy and sell. (Ex: 1.3% profit)
     #  - range: Between target two price, buy and sell. (Ex: <= 0.00100 buy - >= 0.00150 sell )
     parser.add_argument('--mode', type=str, help='Working Mode', default='profit')
