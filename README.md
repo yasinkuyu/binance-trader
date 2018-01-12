@@ -42,9 +42,13 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
 
     python trader.py --symbol XVGBTC
     
-    With option parameters
-
-    python trader.py --symbol XVGBTC --quantity 200 --profit 1.3 --loop 0 --orderid 0
+    Example parameters
+    
+    # Profit mode (default)
+    python trader.py --symbol XVGBTC --quantity 200 --profit 1.3
+    
+    # Range mode
+    python trader.py --symbol XVGBTC --mode range --quantity 260 --buyprice 0.00000780 --sellprice 0.00000790
     
     --quantity     Buy/Sell Quantity (default 200)
     --symbol       Market Symbol (default XVGBTC)
@@ -55,6 +59,10 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
     --decreasing   Sell Price Decreasing -(default 0.00000001)
     --prints       Scanning Profit Screen Print (default True)
     --loop         Loop (default 0 unlimited)
+    
+    --mode         Working modes profit or range (default profit)
+    --buyprice     Buy price (Ex: 0.00000780)
+    --sellprice    Buy price (Ex: 0.00000790)
 
     Symbol structure;
         XXXBTC  (Bitcoin)

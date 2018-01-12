@@ -123,7 +123,6 @@ class Orders():
         except Exception as e:
             print ('gt: %s' % (e))
     
-    
     @staticmethod
     def get_info(symbol):
         try:        
