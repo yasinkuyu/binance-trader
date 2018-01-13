@@ -106,7 +106,7 @@ class Trading():
                 '''
                 if self.stop_loss > 0:
                                     
-                    if stop(symbol, quantity, sell_id):
+                    if self.stop(symbol, quantity, sell_id):
                         break
                     else:
                         continue
@@ -126,7 +126,7 @@ class Trading():
     
         stop_order = Orders.get_order(symbol, sell_id)
     
-        stopprice =  calc(float(stop_order['price']))
+        stopprice =  self.calc(float(stop_order['price']))
     
         lossprice = stopprice - (stopprice * self.stop_loss / 100)
 
