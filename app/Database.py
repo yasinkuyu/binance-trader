@@ -1,15 +1,15 @@
 # -*- coding: UTF-8 -*-
 # @yasinkuyu
 
+import os
 import sqlite3
 
+# Define Custom import vars
+path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../db/orders.db')
+conn = sqlite3.connect(path, check_same_thread = False)
+
 class Database():
-    
-    def __init__(self):
-                
-        # Define Custom import vars
-        self.conn = sqlite3.connect('orders.db', check_same_thread = False)
-    
+         
     # Database (Todo: Not complated)
     @staticmethod
     def write(data):
@@ -18,9 +18,9 @@ class Database():
         data = orderid,symbol,amount,price,side,quantity,profit
         Create a database connection
         '''
-        cur = self.conn.cursor()
+        cur = conn.cursor()
         cur.execute('''INSERT INTO orders VALUES (?, ?, ?, ?, ?, ?, ?)''', data)
-        self.conn.commit()
+        conn.commit()
     
     @staticmethod
     def read(orderid):
@@ -29,7 +29,7 @@ class Database():
         :param orderid: the buy/sell order id
         :return:
         '''
-        cur = self.conn.cursor()
+        cur = conn.cursor()
         cur.execute('SELECT * FROM orders WHERE orderid = ?', (orderid,))
         return cur.fetchone()
     
