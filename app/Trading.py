@@ -7,10 +7,14 @@ import sys
 import time
 import config 
 import threading
+import fixpath
 
 # Define Custom imports
 from Database import Database
 from Orders import Orders
+from colorama import init, Fore, Back, Style
+
+init(autoreset=True)
 
 class Trading():
     
@@ -57,7 +61,7 @@ class Trading():
             # Database log
             Database.write([orderId, symbol, 0, buyPrice, 'BUY', quantity, self.option.profit])
                             
-            print ('Order Id: %d' % orderId)
+            print (Fore.GREEN + "'Order Id: '+ Fore.RESET' %d' % orderId")
         
             return orderId
 
@@ -88,9 +92,9 @@ class Trading():
             
             sell_order = Orders.sell_limit(symbol, quantity, sell_price)  
               
-            print ('Order (Filled) Id: %d' % orderId)
-            print ('LastPrice : %.8f' % last_price)
-            print ('Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(sell_order['price']), sell_price))
+            print (Fore.YELLOW+ "'Order (Filled) Id: ' + Fore.RESET +'%d' % orderId")
+            print (Fore.YELLOW + 'LastPrice : %.8f' % last_price)
+            print (Fore.GREEN + 'Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(sell_order['price']), sell_price))
                         
             sell_id = sell_order['orderId']
         
@@ -321,7 +325,7 @@ class Trading():
         symbol_info = Orders.get_info(symbol)
         
         if not symbol_info:
-            print ("Invalid symbol, please try again...")
+            print (Fore.RED + Style.BRIGHT + "Invalid symbol, please try again...")
             exit(1)
 
         symbol_info['filters'] = {item['filterType']: item for item in symbol_info['filters']}
@@ -346,16 +350,16 @@ class Trading():
         
         # minQty = minimum order quantity
         if quantity < minQty:
-            print ("Invalid quantity, minQty: %.8f (u: %.8f)" % (minQty, quantity))
+            print (Fore.RED + Style.BRIGHT + "Invalid quantity, minQty: %.8f (u: %.8f)" % (minQty, quantity))
             valid = False
         
         if price < minPrice:
-            print ("Invalid price, minPrice: %.8f (u: %.8f)" % (minQty, price))
+            print (Fore.RED + Style.BRIGHT + "Invalid price, minPrice: %.8f (u: %.8f)" % (minQty, price))
             valid = False
         
         # minNotional = minimum order value (price * quantity)
         if notional < minNotional:
-            print ("Invalid price, minNotional: %.8f (u: %.8f)" % (minNotional, notional))
+            print (Fore.RED + Style.BRIGHT + "Invalid price, minNotional: %.8f (u: %.8f)" % (minNotional, notional))
             valid = False
         
         if not valid:
@@ -368,8 +372,8 @@ class Trading():
 
         symbol = self.option.symbol
 
-        print ('@yasinkuyu, 2018')
-        print ('Auto Trading for Binance.com. --symbol: %s\n' % symbol)
+        print (Back.WHITE + Fore.BLUE + Style.BRIGHT +'@yasinkuyu, 2018')
+        print (Back.WHITE + Fore.BLUE + Style.BRIGHT +'Auto Trading for Binance.com. --symbol: %s\n' % symbol)
 
         # Validate symbol
         self.validate()
@@ -383,8 +387,7 @@ class Trading():
            print ('Wait buyprice:%.8f sellprice:%.8f' % (self.option.buyprice, self.option.sellprice))
 
         else:
-           print ('%s%% profit scanning for %s\n' % (self.option.profit, symbol))
-
+           print (Fore.GREEN + Style.BRIGHT + '%s%% profit scanning for %s\n' % (self.option.profit, symbol))
         print ('... \n')
 
         while (cycle <= self.option.loop):
