@@ -14,7 +14,7 @@ from Orders import Orders
 
 class Trading():
     
-    # Define parser vars  
+    # Define trade vars  
     order_id = 0
     order_data = None
     
@@ -71,16 +71,17 @@ class Trading():
         '''
         The specified limit will try to sell until it reaches.
         If not successful, the order will be canceled.
-         
+
         check_order = Orders.get_order(symbol, orderId)
-        
+
         if check_order['status'] == 'FILLED':
-            
+
             self.buy_filled_qty = float(order['executedQty'])
-            
+
             break
-        
+
         '''
+
         invalidAttempts = 0
          
         while invalidAttempts < self.INVALID_ATTEMPTS_LIMIT:
@@ -121,7 +122,7 @@ class Trading():
             Orders.cancel_order(symbol, orderId)
             self.order_id = 0
             self.order_data = None
-            
+
     def stop(symbol, quantity, sell_id):
     
         stop_order = Orders.get_order(symbol, sell_id)
@@ -251,7 +252,7 @@ class Trading():
         
         # Spread ( profit )
         profitableSellingPrice = self.calc(lastBid)
-         
+
         # Check working mode
         if self.option.mode == 'range':
 

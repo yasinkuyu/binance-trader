@@ -52,10 +52,10 @@ class Binance:
                 print ('%.2f%% profit : %s (bid:%.8f-ask%.8f)' % (profit, coin['symbol'], lastBid, lastAsk))
             
 try:
-    
+
     m = Binance()
     # m.balances()
-    
+
     print ('1 -) Print orders')
     print ('2 -) Scan profits')
     print ('Enter option number: Ex: 2')

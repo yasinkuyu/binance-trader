@@ -4,11 +4,10 @@ import requests
 
 try:
     from urllib import urlencode
+# python3
 except ImportError:
     from urllib.parse import urlencode
  
-# https://github.com/purboox/BinanceAPI
-
 class BinanceAPI:
     
     BASE_URL = "https://www.binance.com/api/v1"
