@@ -243,7 +243,7 @@ class Trading():
         # Order book prices
         lastBid, lastAsk = Orders.get_order_book(symbol)
     
-        # Target buy price, add little increase 
+        # Target buy price, add little increase #87
         buyPrice = lastBid + self.option.increasing
     
         # Target sell price, decrease little 
@@ -274,7 +274,7 @@ class Trading():
                 order = self.order_data;
             
                 # Last control
-                newProfitableSellingPrice = calc(float(order['price']))
+                newProfitableSellingPrice = self.calc(float(order['price']))
                          
                 if (lastAsk >= newProfitableSellingPrice):
                     profitableSellingPrice = newProfitableSellingPrice
