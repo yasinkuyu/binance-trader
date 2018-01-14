@@ -22,6 +22,13 @@ class Binance:
             if float(balance['locked']) > 0 or float(balance['free']) > 0:
                 print ('%s: %s' % (balance['asset'], balance['free']))
 
+    def balance(self, asset="BTC"):
+        balances = self.client.get_account()
+
+        balances['balances'] = {item['asset']: item for item in balances['balances']}
+        
+        print balances['balances'][asset]['free']
+                 
     def orders(self, symbol, limit):
         orders = self.client.get_open_orders(symbol, limit)
         print orders
@@ -58,6 +65,7 @@ try:
     print ('1 -) Print orders')
     print ('2 -) Scan profits')
     print ('3 -) List balances')
+    print ('4 -) Check balance')
     print ('Enter option number: Ex: 2')
 
     option = raw_input()
@@ -74,6 +82,15 @@ try:
     
     elif option is '3':
         m.balances()
+    elif option is '4':
+        
+        print ('Enter asset: Ex: BTC')
+        
+        symbol = raw_input()
+        
+        print ('%s balance' % (symbol))
+        
+        m.balance(symbol)
     else:
         
         print ('Enter Asset (Ex: BTC, ETC, BNB, USDT)')
