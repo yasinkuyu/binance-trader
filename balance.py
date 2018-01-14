@@ -54,10 +54,10 @@ class Binance:
 try:
 
     m = Binance()
-    # m.balances()
 
     print ('1 -) Print orders')
     print ('2 -) Scan profits')
+    print ('3 -) List balances')
     print ('Enter option number: Ex: 2')
 
     option = raw_input()
@@ -71,7 +71,9 @@ try:
         # Orders
         print ('%s Orders' % (symbol))
         m.orders(symbol, 10)
-        
+    
+    elif option is '3':
+        m.balances()
     else:
         
         print ('Enter Asset (Ex: BTC, ETC, BNB, USDT)')
