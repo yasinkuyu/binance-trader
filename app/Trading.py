@@ -30,6 +30,9 @@ class Trading():
     # Buy/Sell qty
     quantity = 0
     
+    # float(step_size * math.floor(float(free)/step_size))
+    step_size = 0
+    
     # Define static vars
     WAIT_TIME_BUY_SELL = 1 # seconds
     WAIT_TIME_STOP_LOSS = 20 # seconds
@@ -53,7 +56,7 @@ class Trading():
         self.checkorder()
             
         try: 
-                
+
             # Create order
             orderId = Orders.buy_limit(symbol, quantity, buyPrice)
                 
@@ -62,6 +65,8 @@ class Trading():
                             
             print ('Buy order created id:%d, q:%.8f, p:%.8f' % (orderId, quantity, float(buyPrice)))
         
+            self.order_id = orderId
+            
             return orderId
 
         except Exception as e:
@@ -75,20 +80,36 @@ class Trading():
         The specified limit will try to sell until it reaches.
         If not successful, the order will be canceled.
         '''
-
+ 
+        buy_order = Orders.get_order(symbol, orderId)
+        
+        if buy_order['status'] == 'FILLED' and buy_order['side'] == "BUY":
+            print ("Buy order filled... Try sell...")
+            
         invalidAttempts = 0
  
         while invalidAttempts < self.INVALID_ATTEMPTS_LIMIT:
-    
+
+            # Format quantity
+            stepsize = quantity % float(self.step_size)
+            quantity = quantity - stepsize
+            
             sell_order = Orders.sell_limit(symbol, quantity, sell_price)  
       
-            print ('Order (Filled) Id: %d' % orderId)
-            print ('LastPrice : %.8f' % last_price)
-            print ('Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(sell_order['price']), sell_price))
-                
+            print ('Sell order create Id: %d' % orderId)
+            
             sell_id = sell_order['orderId']
 
             if sell_order['status'] == 'FILLED':
+      
+                print ('Sell order (Filled) Id: %d' % orderId)
+                print ('LastPrice : %.8f' % last_price)
+                print ('Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(sell_order['price']), sell_price))
+                
+                self.order_id = 0
+                self.order_data = 0
+                self.INVALID_ATTEMPTS_LIMIT = 0
+                
                 break
 
             if sell_id != None:
@@ -113,6 +134,7 @@ class Trading():
                 continue
 
         if invalidAttempts != 0:
+            print ("invalidAttempts %s" % (invalidAttempts))
             self.cancel(symbol, orderId)
 
     def stop(symbol, quantity, sell_id):
@@ -209,8 +231,10 @@ class Trading():
             elif status == 'FILLED':
                 self.order_id = order['orderId']
                 self.order_data = order
+                print ("Filled")
                 break
             elif status == 'PARTIALLY_FILLED':
+                print ("Partial filled")
                 break
             else:
                 trading_size += 1
@@ -274,7 +298,7 @@ class Trading():
         # analyze.start()
         
         if self.order_id > 0:
-                        
+             
             # Profit mode
             if self.order_data is not None:
                 
@@ -310,7 +334,7 @@ class Trading():
            (lastPrice <= self.option.buyprice and self.option.mode == 'range'):
                        
             if self.order_id == 0:
-                self.order_id = self.buy(symbol, quantity, buyPrice)
+                self.buy(symbol, quantity, buyPrice)
             
                 # Perform check/sell action
                 # checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
@@ -325,7 +349,7 @@ class Trading():
 
         # Get symbol exchance info
         symbol_info = Orders.get_info(symbol)
-        
+
         if not symbol_info:
             print ("Invalid symbol, please try again...")
             exit(1)
@@ -346,9 +370,13 @@ class Trading():
         minQty = float(self.filters()['filters']['LOT_SIZE']['minQty'])
         minPrice = float(self.filters()['filters']['PRICE_FILTER']['minPrice'])
         minNotional = float(self.filters()['filters']['MIN_NOTIONAL']['minNotional'])
+
+        stepSize = float(self.filters()['filters']['LOT_SIZE']['stepSize'])
         
         price = lastPrice
         notional = lastPrice * quantity
+        
+        self.step_size = stepSize
         
         # minQty = minimum order quantity
         if quantity < minQty:
