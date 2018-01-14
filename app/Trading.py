@@ -31,7 +31,7 @@ class Trading():
     quantity = 0
     
     # Define static vars
-    WAIT_TIME_BUY_SELL = 5 # seconds
+    WAIT_TIME_BUY_SELL = 1 # seconds
     WAIT_TIME_STOP_LOSS = 20 # seconds
     INVALID_ATTEMPTS_LIMIT = 20 # int
     MAX_TRADE_SIZE = 10 # int
@@ -49,6 +49,9 @@ class Trading():
     
     def buy(self, symbol, quantity, buyPrice):
         
+        # Do you have an open order?
+        self.checkorder()
+            
         try: 
                 
             # Create order
@@ -57,7 +60,7 @@ class Trading():
             # Database log
             Database.write([orderId, symbol, 0, buyPrice, 'BUY', quantity, self.option.profit])
                             
-            print ('Order Id: %d' % orderId)
+            print ('Buy order created id:%d, q:%.8f, p:%.8f' % (orderId, quantity, float(buyPrice)))
         
             return orderId
 
@@ -67,46 +70,37 @@ class Trading():
             return None
 
     def sell(self, symbol, quantity, orderId, sell_price, last_price):
-        
+
         '''
         The specified limit will try to sell until it reaches.
         If not successful, the order will be canceled.
-
-        check_order = Orders.get_order(symbol, orderId)
-
-        if check_order['status'] == 'FILLED':
-
-            self.buy_filled_qty = float(order['executedQty'])
-
-            break
-
         '''
 
         invalidAttempts = 0
-         
+ 
         while invalidAttempts < self.INVALID_ATTEMPTS_LIMIT:
-            
+    
             sell_order = Orders.sell_limit(symbol, quantity, sell_price)  
-              
+      
             print ('Order (Filled) Id: %d' % orderId)
             print ('LastPrice : %.8f' % last_price)
             print ('Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(sell_order['price']), sell_price))
-                        
+                
             sell_id = sell_order['orderId']
-        
+
             if sell_order['status'] == 'FILLED':
                 break
-        
+
             if sell_id != None:
-            
+    
                 time.sleep(self.WAIT_TIME_BUY_SELL)
-            
+    
                 '''
                 If all sales trials fail, 
                 the grievance is stop-loss.
                 '''
                 if self.stop_loss > 0:
-                                    
+                            
                     if self.stop(symbol, quantity, sell_id):
                         break
                     else:
@@ -119,12 +113,10 @@ class Trading():
                 continue
 
         if invalidAttempts != 0:
-            Orders.cancel_order(symbol, orderId)
-            self.order_id = 0
-            self.order_data = None
+            self.cancel(symbol, orderId)
 
     def stop(symbol, quantity, sell_id):
-    
+        # If the target is not reached, stop-loss.
         stop_order = Orders.get_order(symbol, sell_id)
     
         stopprice =  self.calc(float(stop_order['price']))
@@ -136,9 +128,7 @@ class Trading():
         # Order status
         if status == 'NEW':
             
-            cancel = Orders.cancel_order(symbol, sell_id)
-            
-            if cancel:
+            if self.cancel(symbol, sell_id):
             
                 # Stop loss
                 if last_price <= lossprice: 
@@ -173,7 +163,11 @@ class Trading():
             return False
 
     def check(self, symbol, orderId, quantity):
-    
+        # If profit is available and there is no purchase from the specified price, take it with the market.
+        
+        # Do you have an open order?
+        self.checkorder()
+        
         trading_size = 0
         time.sleep(self.WAIT_TIME_BUY_SELL)
     
@@ -185,7 +179,7 @@ class Trading():
             side  = order['side']
             price = float(order['price'])
         
-            # Todo: Sell partial qty
+            # TODO: Sell partial qty
             orig_qty = float(order['origQty']) 
             self.buy_filled_qty = float(order['executedQty'])
         
@@ -195,7 +189,7 @@ class Trading():
         
             if status == 'NEW':
             
-                if Orders.cancel_order(symbol, orderId) == True:
+                if self.cancel(symbol, orderId):
             
                     buyo = Orders.buy_market(symbol, quantity)
                 
@@ -213,17 +207,24 @@ class Trading():
                     break
 
             elif status == 'FILLED':
-            
                 self.order_id = order['orderId']
                 self.order_data = order
-                
                 break
             elif status == 'PARTIALLY_FILLED':
                 break
             else:
                 trading_size += 1
                 continue
-         
+            
+    def cancel(self,symbol, orderId):
+        # If order is not filled, cancel it.
+        check_order = Orders.get_order(symbol, orderId)
+        if check_order['status'] == 'NEW' or check_order['status'] != "CANCELLED":
+            Orders.cancel_order(symbol, orderId)
+            self.order_id = 0
+            self.order_data = None
+            return True
+                   
     def calc(self, lastBid):
         try:
 
@@ -233,6 +234,11 @@ class Trading():
             print ('c: %s' % (e))
             return 
             
+    def checkorder(self):
+        # If there is an open order, exit.
+        if self.order_id > 0:
+            exit(1)
+                 
     def action(self, symbol):
         
         # Order amount
@@ -306,9 +312,9 @@ class Trading():
             if self.order_id == 0:
                 self.order_id = self.buy(symbol, quantity, buyPrice)
             
-            # Perform check/sell action
-            checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
-            checkAction.start()
+                # Perform check/sell action
+                # checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
+                # checkAction.start()
     
     def logic(self):
         return 0
@@ -355,7 +361,7 @@ class Trading():
         
         # minNotional = minimum order value (price * quantity)
         if notional < minNotional:
-            print ("Invalid price, minNotional: %.8f (u: %.8f)" % (minNotional, notional))
+            print ("Invalid notional, minNotional: %.8f (u: %.8f)" % (minNotional, notional))
             valid = False
         
         if not valid:
