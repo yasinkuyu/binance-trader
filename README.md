@@ -1,4 +1,4 @@
-# Binance Trader (RC)
+# Binance Trader (RC 1)
 
 This is an experimental bot for auto trading the binance.com exchange. [@yasinkuyu](https://twitter.com/yasinkuyu)
 
@@ -6,7 +6,7 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
 
 ## Configuration
 
-1. Signup Binance ( Referral url: https://www.binance.com/?ref=10701111 or https://launchpad.binance.com/register.html?ref=10701111 )
+1. Signup Binance ( Referral url: https://www.binance.com/?ref=10701111 )
 2. Enable Two-factor Authentication    
 3. Go API Center, https://www.binance.com/userCenter/createApi.html
 4. Create New Key
@@ -129,6 +129,7 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
     
     - October 7, 2017 Beta
     - January 6, 2018 RC
+    - January 15, 2018 RC 1
      
 ## License
 
