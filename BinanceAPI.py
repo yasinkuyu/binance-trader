@@ -4,10 +4,11 @@ import requests
 
 try:
     from urllib import urlencode
-# python3
 except ImportError:
     from urllib.parse import urlencode
  
+# https://github.com/purboox/BinanceAPI
+
 class BinanceAPI:
     
     BASE_URL = "https://www.binance.com/api/v1"
@@ -49,10 +50,6 @@ class BinanceAPI:
 
     def get_products(self):
         return requests.get(self.PUBLIC_URL, timeout=30, verify=True).json()
-        
-    def get_exchance_info(self):
-        path = "%s/exchangeInfo" % self.BASE_URL
-        return requests.get(path, timeout=30, verify=True).json()
 
     def get_open_orders(self, market, limit = 100):
         path = "%s/openOrders" % self.BASE_URL
@@ -61,22 +58,28 @@ class BinanceAPI:
 
     def buy_limit(self, market, quantity, rate):
         path = "%s/order" % self.BASE_URL
-        params = self._order(market, quantity, "BUY", rate)
+        params = {"symbol": market, "side": "BUY", \
+            "type": "LIMIT", "timeInForce": "GTC", \
+            "quantity": '%.8f' % quantity, "price": '%.8f' % rate}
         return self._post(path, params)
 
     def sell_limit(self, market, quantity, rate):
         path = "%s/order" % self.BASE_URL
-        params = self._order(market, quantity, "SELL", rate)
+        params = {"symbol": market, "side": "SELL", \
+            "type": "LIMIT", "timeInForce": "GTC", \
+            "quantity": '%.8f' % quantity, "price": '%.8f' % rate}
         return self._post(path, params)
 
     def buy_market(self, market, quantity):
         path = "%s/order" % self.BASE_URL
-        params = self._order(market, quantity, "BUY")
+        params = {"symbol": market, "side": "BUY", \
+            "type": "MARKET", "quantity": '%.8f' % quantity}
         return self._post(path, params)
 
     def sell_market(self, market, quantity):
         path = "%s/order" % self.BASE_URL
-        params = self._order(market, quantity, "SELL")
+        params = {"symbol": market, "side": "SELL", \
+            "type": "MARKET", "quantity": '%.8f' % quantity}
         return self._post(path, params)
 
     def query_order(self, market, orderId):
@@ -121,28 +124,6 @@ class BinanceAPI:
         return requests.post(url, headers=header, \
             timeout=30, verify=True).json()
 
-    def _order(self, market, quantity, side, rate=None):
-        params = {}
-         
-        if rate is not None:
-            params["type"] = "LIMIT"
-            params["price"] = self._format(rate)
-            params["timeInForce"] = "GTC"
-        else:
-            params["type"] = "MARKET"
-
-        params["symbol"] = market
-        params["side"] = side
-        params["quantity"] = '%.8f' % quantity
-        
-        return params
-
-    def _format(self, price):
-        if float(price) < 0.1:
-            return "{:.8f}".format(price)
-        else:
-            return "{:.3f}".format(price)
-            
     def _delete(self, path, params={}):
         params.update({"recvWindow": 120000})
         query = urlencode(self._sign(params))
