@@ -1,13 +1,8 @@
-<<<<<<< HEAD
-# Binance Trader (RC)
-@yasinkuyu - 2017
-=======
 # Binance Trader (RC 1)
->>>>>>> 10f28a84a7a17b5617995d83be9fe31a7bd0cc39
 
-This is an experimental bot for auto trading the binance.com exchange.
+This is an experimental bot for auto trading the binance.com exchange. [@yasinkuyu](https://twitter.com/yasinkuyu)
 
-![Screenshot](https://github.com/yasinkuyu/binance-trader/blob/master/screenshot.png)
+![Screenshot](https://github.com/yasinkuyu/binance-trader/blob/master/img/screenshot.png)
 
 ## Configuration
 
@@ -17,7 +12,7 @@ This is an experimental bot for auto trading the binance.com exchange.
 4. Create New Key
 
         [✓] Read Info [✓] Enable Trading [X] Enable Withdrawals 
-5. Rename config.sample.py to config.py
+5. Rename config.sample.py to config.py / orders.sample.db to orders.db
 6. Get an API and Secret Key, insert into config.py
 
         API key for account access
@@ -47,9 +42,13 @@ This is an experimental bot for auto trading the binance.com exchange.
 
     python trader.py --symbol XVGBTC
     
-    With option parameters
-
-    python trader.py --symbol XVGBTC --quantity 200 --profit 1.3 --loop 0 --orderid 0
+    Example parameters
+    
+    # Profit mode (default)
+    python trader.py --symbol XVGBTC --quantity 200 --profit 1.3
+    
+    # Range mode
+    python trader.py --symbol XVGBTC --mode range --quantity 260 --buyprice 0.00000780 --sellprice 0.00000790
     
     --quantity     Buy/Sell Quantity (default 200)
     --symbol       Market Symbol (default XVGBTC)
@@ -60,6 +59,12 @@ This is an experimental bot for auto trading the binance.com exchange.
     --decreasing   Sell Price Decreasing -(default 0.00000001)
     --prints       Scanning Profit Screen Print (default True)
     --loop         Loop (default 0 unlimited)
+    
+    --mode         Working modes profit or range (default profit)
+                   profit: Find defined profit, buy and sell. (Ex: 1.3% profit)
+                   range: Between target two price, buy and sell. (Ex: <= 0.00000780 buy - >= 0.00000790 sell )
+    --buyprice     Buy price (Ex: 0.00000780)
+    --sellprice    Buy price (Ex: 0.00000790)
 
     Symbol structure;
         XXXBTC  (Bitcoin)
@@ -108,10 +113,16 @@ This is an experimental bot for auto trading the binance.com exchange.
     Filter failure: PRICE_FILTER
     https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md
     
+    Timestamp for this request was 1000ms ahead of the server's time.
+    https://github.com/yasinkuyu/binance-trader/issues/63#issuecomment-355857901
+    
 ## Roadmap
 
     - MACD indicator (buy/sell)
     - Stop-Loss implementation
+    - Working modes
+      - profit: Find defined profit, buy and sell. (Ex: 1.3% profit)
+      - range:  Between target two price, buy and sell. (Ex: <= 0.00100 buy - >= 0.00150 sell )
     - Binance/Bittrex/HitBTC Arbitrage  
     
     ...
