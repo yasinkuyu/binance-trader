@@ -34,10 +34,10 @@ class Trading():
     step_size = 0
     
     # Define static vars
-    WAIT_TIME_BUY_SELL = 1 # seconds
+    WAIT_TIME_BUY_SELL = 0.6 # seconds
     WAIT_TIME_STOP_LOSS = 20 # seconds
-    INVALID_ATTEMPTS_LIMIT = 20 # int
-    MAX_TRADE_SIZE = 10 # int
+    INVALID_ATTEMPTS_LIMIT = 10 # int
+    MAX_TRADE_SIZE = 7 # int
     
     def __init__(self, option):
                 
@@ -94,6 +94,11 @@ class Trading():
             stepsize = quantity % float(self.step_size)
             quantity = quantity - stepsize
             
+            check_sell_order = Orders.get_order(symbol, orderId)
+            
+            if check_sell_order['status'] == 'NEW' and check_sell_order['side'] == "SELL":
+                break
+                
             sell_order = Orders.sell_limit(symbol, quantity, sell_price)  
       
             print ('Sell order create Id: %d' % orderId)
