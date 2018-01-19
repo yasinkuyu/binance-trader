@@ -273,9 +273,6 @@ class Trading():
                  
     def action(self, symbol):
 
-        print ('increasing:%.8f' % (self.increasing))
-        print ('decreasing:%.8f' % (self.decreasing))
-        exit(1)
         # Order amount
         quantity = self.quantity
         
