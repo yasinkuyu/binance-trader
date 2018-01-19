@@ -379,10 +379,10 @@ class Trading():
         minPrice = float(self.filters()['filters']['PRICE_FILTER']['minPrice'])
         minNotional = float(self.filters()['filters']['MIN_NOTIONAL']['minNotional'])
 
-        #stepSize defines the intervals that a quantity/icebergQty can be increased/decreased by.
+        # stepSize defines the intervals that a quantity/icebergQty can be increased/decreased by.
         stepSize = float(self.filters()['filters']['LOT_SIZE']['stepSize'])
         
-        #tickSize defines the intervals that a price/stopPrice can be increased/decreased by
+        # tickSize defines the intervals that a price/stopPrice can be increased/decreased by
         tickSize = float(self.filters()['filters']['PRICE_FILTER']['tickSize'])
         
         self.increasing = tickSize
@@ -399,7 +399,7 @@ class Trading():
             valid = False
         
         if price < minPrice:
-            print ("Invalid price, minPrice: %.8f (u: %.8f)" % (minQty, price))
+            print ("Invalid price, minPrice: %.8f (u: %.8f)" % (minPrice, price))
             valid = False
 
         # minNotional = minimum order value (price * quantity)
