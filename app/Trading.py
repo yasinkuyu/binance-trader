@@ -368,30 +368,40 @@ class Trading():
     
     def validate(self):
         
-        symbol = self.option.symbol
-        
         valid = True
+        symbol = self.option.symbol
+        filters = self.filters()['filters']
+
+        lastPrice = Orders.get_ticker(symbol)
+
+        minQty = float(filters['LOT_SIZE']['minQty'])
+        minPrice = float(filters['PRICE_FILTER']['minPrice'])
+        minNotional = float(filters['MIN_NOTIONAL']['minNotional'])
         quantity = float(self.option.quantity)
         
-        lastPrice = Orders.get_ticker(symbol)
-        
-        minQty = float(self.filters()['filters']['LOT_SIZE']['minQty'])
-        minPrice = float(self.filters()['filters']['PRICE_FILTER']['minPrice'])
-        minNotional = float(self.filters()['filters']['MIN_NOTIONAL']['minNotional'])
-
         # stepSize defines the intervals that a quantity/icebergQty can be increased/decreased by.
-        stepSize = float(self.filters()['filters']['LOT_SIZE']['stepSize'])
-        
+        stepSize = float(filters['LOT_SIZE']['stepSize'])
+
         # tickSize defines the intervals that a price/stopPrice can be increased/decreased by
-        tickSize = float(self.filters()['filters']['PRICE_FILTER']['tickSize'])
+        tickSize = float(filters['PRICE_FILTER']['tickSize'])
+
+        # Format quantity
+        self.step_size = stepSize
         
         self.increasing = tickSize
         self.decreasing = tickSize
         
+        # If option increasing default tickSize greater than
+        if (float(self.option.increasing) > tickSize):
+            self.increasing = self.option.increasing
+        
+        # If option decreasing default tickSize greater than
+        if (float(self.option.decreasing) > tickSize):
+            self.decreasing = self.option.decreasing
+        
+        # Just for validation
         price = lastPrice
         notional = lastPrice * quantity
-        
-        self.step_size = stepSize
         
         # minQty = minimum order quantity
         if quantity < minQty:
