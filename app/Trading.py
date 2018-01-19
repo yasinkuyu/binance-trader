@@ -368,24 +368,6 @@ class Trading():
         if self.option.prints and self.order_id == 0:
             print ('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk))
 
-        # analyze = threading.Thread(target=analyze, args=(symbol,))
-        # analyze.start()
-        
-        '''
-        Did profit get caught
-        if ask price is greater than profit price, 
-        buy with my buy price,    
-        '''
-        if (lastAsk >= profitableSellingPrice and self.option.mode == 'profit') or \
-           (lastPrice <= self.option.buyprice and self.option.mode == 'range'):
-                       
-            if self.order_id == 0:
-                self.buy(symbol, quantity, buyPrice)
-            
-                # Perform check/sell action
-                # checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
-                # checkAction.start()
-                
         if self.order_id > 0:
              
             # Profit mode
@@ -412,6 +394,24 @@ class Trading():
             # Perform buy action
             sellAction = threading.Thread(target=self.sell, args=(symbol, quantity, self.order_id, profitableSellingPrice, lastPrice,))
             sellAction.start()
+
+            self.isThreadOpen = False
+            return
+        
+        '''
+        Did profit get caught
+        if ask price is greater than profit price, 
+        buy with my buy price,    
+        '''
+        if (lastAsk >= profitableSellingPrice and self.option.mode == 'profit') or \
+           (lastPrice <= self.option.buyprice and self.option.mode == 'range'):
+                       
+            if self.order_id == 0:
+                self.buy(symbol, quantity, buyPrice)
+            
+                # Perform check/sell action
+                # checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
+                # checkAction.start()
 
         self.isThreadOpen = False
     
