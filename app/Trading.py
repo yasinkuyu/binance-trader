@@ -272,7 +272,10 @@ class Trading():
             exit(1)
                  
     def action(self, symbol):
-        
+
+        print ('increasing:%.8f' % (self.increasing))
+        print ('decreasing:%.8f' % (self.decreasing))
+        exit(1)
         # Order amount
         quantity = self.quantity
         
@@ -287,7 +290,7 @@ class Trading():
     
         # Target sell price, decrease little 
         sellPrice = lastAsk - self.decreasing 
-        
+
         # Spread ( profit )
         profitableSellingPrice = self.calc(lastBid)
 
@@ -387,17 +390,14 @@ class Trading():
 
         # Format quantity
         self.step_size = stepSize
-        
-        self.increasing = tickSize
-        self.decreasing = tickSize
-        
+                
         # If option increasing default tickSize greater than
-        if (float(self.option.increasing) > tickSize):
-            self.increasing = self.option.increasing
+        if (float(self.option.increasing) < tickSize):
+            self.increasing = tickSize
         
         # If option decreasing default tickSize greater than
-        if (float(self.option.decreasing) > tickSize):
-            self.decreasing = self.option.decreasing
+        if (float(self.option.decreasing) < tickSize):
+            self.decreasing = tickSize
         
         # Just for validation
         price = lastPrice
