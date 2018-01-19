@@ -11,6 +11,7 @@ import threading
 # Define Custom imports
 from Database import Database
 from Orders import Orders
+from Tools import Tools
 
 class Trading():
     
@@ -32,6 +33,9 @@ class Trading():
     
     # float(step_size * math.floor(float(free)/step_size))
     step_size = 0
+    
+    # Satoshi decimal places count
+    satoshiCount = 0
     
     # Checker for flood threading
     is_thread_open = False
@@ -288,6 +292,16 @@ class Trading():
         # If there is an open order, exit.
         if self.order_id > 0:
             exit(1)
+            
+    def set_satoshi_count(self, lastPrice, lastBid, lastAsk):
+        # Compare decimal places and use the largest for satoshiCount
+        sats1 = int(str(Tools.e2f(lastPrice))[::-1].find('.'))
+        sats2 = int(str(Tools.e2f(lastBid))[::-1].find('.'))
+        sats3 = int(str(Tools.e2f(lastAsk))[::-1].find('.'))
+        integers = [sats1, sats2, sats3]
+        newCount = max(integers)
+        if self.satoshiCount < newCount:
+            self.satoshiCount = newCount
                  
     def action(self, symbol):
 
@@ -303,13 +317,32 @@ class Trading():
         lastBid, lastAsk = Orders.get_order_book(symbol)
     
         # Target buy price, add little increase #87
-        buyPrice = lastBid + self.increasing
+        buyPrice = lastBid + (lastBid * self.increasing / 100)
     
         # Target sell price, decrease little 
-        sellPrice = lastAsk - self.decreasing 
+        sellPrice = lastAsk - (lastAsk * self.decreasing / 100) 
 
         # Spread ( profit )
         profitableSellingPrice = self.calc(lastBid)
+        
+        # Format sell price according to Binance restriction
+        self.set_satoshi_count(lastPrice, lastBid, lastAsk)
+        
+        buyPrice = round(buyPrice, self.satoshiCount)
+        sellPrice = round(sellPrice, self.satoshiCount)
+        profitableSellingPrice = round(profitableSellingPrice, self.satoshiCount)
+
+        # Order amount
+        if self.quantity > 0:
+            quantity = self.quantity
+        else:
+            quantity = self.amount / lastBid
+            if self.satoshiCount <= 6:
+                quantity = round(quantity, 3)
+            elif self.satoshiCount <= 7:
+                quantity = round(quantity, 2)
+            else:
+                quantity = int(round(quantity))
         
         # Check working mode
         if self.option.mode == 'range':
@@ -346,6 +379,8 @@ class Trading():
             If the order is complete, 
             try to sell it.
             '''
+            
+            profitableSellingPrice = round((profitableSellingPrice - (profitableSellingPrice * self.decreasing / 100)), self.satoshiCount)
                 
             # Perform buy action
             sellAction = threading.Thread(target=self.sell, args=(symbol, quantity, self.order_id, profitableSellingPrice, lastPrice,))
@@ -402,6 +437,24 @@ class Trading():
         minNotional = float(filters['MIN_NOTIONAL']['minNotional'])
         quantity = float(self.option.quantity)
         
+        if self.quantity > 0:
+            quantity = float(self.quantity)
+        else:
+            lastBid, lastAsk = Orders.get_order_book(symbol)
+            quantity = self.amount / lastBid
+            satsQuantity1 = int(str(Tools.e2f(lastBid))[::-1].find('.'))
+            satsQuantity2 = int(str(Tools.e2f(lastAsk))[::-1].find('.'))
+            satsQuantity3 = int(str(Tools.e2f(lastPrice))[::-1].find('.'))
+            integer = [satsQuantity1, satsQuantity2, satsQuantity3]
+            satsQuantity = max(integer)
+
+            if satsQuantity <= 6:
+                quantity = round(quantity, 3)
+            elif satsQuantity <= 7:
+                quantity = round(quantity, 2)
+            else:
+                quantity = int(round(quantity))
+        
         # stepSize defines the intervals that a quantity/icebergQty can be increased/decreased by.
         stepSize = float(filters['LOT_SIZE']['stepSize'])
 
@@ -418,18 +471,6 @@ class Trading():
         # If option decreasing default tickSize greater than
         if (float(self.option.decreasing) < tickSize):
             self.decreasing = tickSize
-        
-        # Order amount
-        if self.quantity == 0:
-    
-            # Order book prices
-            lastBid, lastAsk = Orders.get_order_book(symbol)
-
-            # Calculate amount to quantity
-            quantity = float(self.amount / lastBid)
-            
-            # Set global varible
-            self.quantity = quantity
         
         # Just for validation
         price = lastPrice

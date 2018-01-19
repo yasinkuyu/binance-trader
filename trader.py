@@ -32,7 +32,7 @@ if __name__ == '__main__':
     parser.add_argument('--loop', type=int, help='Loop (0 unlimited)', default=0)
 
     # Working Modes
-    #  - profit: Find defined profit, buy and sell. (Ex: 1.3% profit)
+    #  - profit: Find defined profit, buy and sell. (Hunter Mode) (Ex: 1.3% profit)
     #  - range: Between target two price, buy and sell. (Ex: <= 0.00100 buy - >= 0.00150 sell )
     parser.add_argument('--mode', type=str, help='Working Mode', default='profit')
     parser.add_argument('--buyprice', type=float, help='Buy Price (Price is greater than equal <=)', default=0)
