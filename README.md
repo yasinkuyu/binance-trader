@@ -144,9 +144,9 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
 #### Tip Box
 [Yasin](http://yasinkuyu.net/wallet) 
 
-[WeSpeakCrypto]
-BTC wallet: 182Ew6JK9Mspw4BszdBP7RgpdWf6STe46G
-LTC wallet: LXgNmMPied4AiGKAsE1kY2M9BRaV3yxDC1
-ETH wallet: 0xed8100b70e15d9fcd53f1d989c67775bf55e4475
+WeSpeakCrypto
+    BTC wallet: 182Ew6JK9Mspw4BszdBP7RgpdWf6STe46G
+    LTC wallet: LXgNmMPied4AiGKAsE1kY2M9BRaV3yxDC1
+    ETH wallet: 0xed8100b70e15d9fcd53f1d989c67775bf55e4475
 
 ---
