@@ -33,10 +33,15 @@ class Trading():
     # float(step_size * math.floor(float(free)/step_size))
     step_size = 0
     
+    # Checker for flood threading
+    is_thread_open = False
+    
     # Define static vars
-    WAIT_TIME_BUY_SELL = 0.6 # seconds
+    WAIT_TIME_BUY_SELL = 1 # seconds
+    WAIT_TIME_CHECK_BUY_SELL = 0.2 # seconds
+    WAIT_TIME_CHECK_SELL = 5 # seconds
     WAIT_TIME_STOP_LOSS = 20 # seconds
-    INVALID_ATTEMPTS_LIMIT = 10 # int
+    
     MAX_TRADE_SIZE = 7 # int
     
     def __init__(self, option):
@@ -50,11 +55,14 @@ class Trading():
         self.wait_time = self.option.wait_time
         self.stop_loss = self.option.stoploss
         
+        #BTC amount
+        self.amount = self.option.amount
+        
         self.increasing = self.option.increasing
         self.decreasing = self.option.decreasing
     
     def buy(self, symbol, quantity, buyPrice):
-        
+
         # Do you have an open order?
         self.checkorder()
             
@@ -88,106 +96,116 @@ class Trading():
         
         if buy_order['status'] == 'FILLED' and buy_order['side'] == "BUY":
             print ("Buy order filled... Try sell...")
-            
-        invalidAttempts = 0
- 
-        while invalidAttempts < self.INVALID_ATTEMPTS_LIMIT:
-
-            # Format quantity
-            stepsize = quantity % float(self.step_size)
-            quantity = quantity - stepsize
-            
-            check_sell_order = Orders.get_order(symbol, orderId)
-            
-            if check_sell_order['status'] == 'NEW' and check_sell_order['side'] == "SELL":
-                break
-                
-            sell_order = Orders.sell_limit(symbol, quantity, sell_price)  
-      
-            print ('Sell order create Id: %d' % orderId)
-            
-            sell_id = sell_order['orderId']
-
-            if sell_order['status'] == 'FILLED':
-      
-                print ('Sell order (Filled) Id: %d' % orderId)
-                print ('LastPrice : %.8f' % last_price)
-                print ('Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(sell_order['price']), sell_price))
-                
-                self.order_id = 0
-                self.order_data = 0
-                self.INVALID_ATTEMPTS_LIMIT = 0
-                
-                break
-
-            if sell_id != None:
-    
-                time.sleep(self.WAIT_TIME_BUY_SELL)
-    
-                '''
-                If all sales trials fail, 
-                the grievance is stop-loss.
-                '''
-                if self.stop_loss > 0:
-                            
-                    if self.stop(symbol, quantity, sell_id):
-                        break
-                    else:
-                        continue
-
-                invalidAttempts = 0
-                break
+        else:
+            time.sleep(self.WAIT_TIME_CHECK_BUY_SELL)
+            if buy_order['status'] == 'FILLED' and buy_order['side'] == "BUY":
+                print ("Buy order filled after 0.1 second... Try sell...")
+            elif buy_order['status'] == 'PARTIALLY_FILLED' and buy_order['side'] == "BUY":
+                print ("Buy order partially filled... Try sell... Cancel remaining buy...")
+                self.cancel(symbol, orderId)
             else:
-                invalidAttempts += 1
-                continue
+                print ("Buy order failed... Cancel order...")
+                self.cancel(symbol, orderId)
+                self.order_id = 0
+                self.is_thread_open = False
+                return
 
-        if invalidAttempts != 0:
-            print ("invalidAttempts %s" % (invalidAttempts))
-            self.cancel(symbol, orderId)
+        # Format quantity
+        stepsize = quantity % float(self.step_size)
+        quantity = quantity - stepsize
+            
+        sell_order = Orders.sell_limit(symbol, quantity, sell_price)  
 
-    def stop(symbol, quantity, sell_id):
+        sell_id = sell_order['orderId']
+        print ('Sell order create id: %d' % sell_id)
+
+        time.sleep(self.WAIT_TIME_CHECK_SELL)
+
+        if sell_order['status'] == 'FILLED':
+
+            print ('Sell order (Filled) Id: %d' % orderId)
+            print ('LastPrice : %.8f' % last_price)
+            print ('Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(sell_order['price']), sell_price))
+            
+            self.order_id = 0
+            self.order_data = None
+            self.is_thread_open = False
+            
+            return
+
+        time.sleep(self.WAIT_TIME_CHECK_SELL)
+
+        '''
+        If all sales trials fail, 
+        the grievance is stop-loss.
+        '''
+
+        if self.stop(symbol, quantity, sell_id, last_price):
+            if Orders.get_order(symbol, sell_id)['status'] != 'FILLED':
+                print ('We apologize... Sold at loss...')
+            self.order_id = 0
+            self.order_data = None
+            self.is_thread_open = False
+        else:
+            print ('We apologize... Cant sell even at loss... Please sell manually... Stopping program...')
+            self.cancel(symbol, sell_id)
+            exit(1)
+            
+    def stop(self, symbol, quantity, orderId, last_price):
         # If the target is not reached, stop-loss.
-        stop_order = Orders.get_order(symbol, sell_id)
-    
+        stop_order = Orders.get_order(symbol, orderId)
+
         stopprice =  self.calc(float(stop_order['price']))
-    
+
         lossprice = stopprice - (stopprice * self.stop_loss / 100)
 
         status = stop_order['status']
-    
+
         # Order status
-        if status == 'NEW':
-            
-            if self.cancel(symbol, sell_id):
-            
+        if status == 'NEW' or status == 'PARTIALLY_FILLED':
+        
+            if self.cancel(symbol, orderId):
+        
                 # Stop loss
                 if last_price <= lossprice: 
-                
-                    sello = Orders.sell_market(symbol, quantity)  
-       
-                    print ('Stop-loss, sell market, %s' % (lossprice))
             
-                    self.order_id = sello['orderId']
-                    self.order_data = sello
-                    
+                    sello = Orders.sell_market(symbol, quantity)  
+   
+                    print ('Stop-loss, sell market, %s' % (last_price))
+        
+                    sell_id = sello['orderId']
+                
                     if sello == True:
                         return True
                     else:
+                        # Wait a while after the sale to the loss.
+                        time.sleep(self.WAIT_TIME_STOP_LOSS)
+                        statusloss = sello['status']
+                        if statusloss != 'NEW':
+                            print ('Stop-loss, sold')
+                            return True
+                        else:
+                            self.cancel(symbol, sell_id)
+                            return False
+                else:
+                    sello = Orders.sell_limit(symbol, quantity, lossprice)
+                    print ('Stop-loss, sell limit, %s' % (lossprice))
+                    time.sleep(self.WAIT_TIME_STOP_LOSS)
+                    statusloss = sello['status']
+                    if statusloss != 'NEW':
+                        print ('Stop-loss, sold')
+                        return True
+                    else:
+                        self.cancel(symbol, sell_id)
                         return False
-            
-                    # Wait a while after the sale to the loss.
-                    time.sleep (self.WAIT_TIME_STOP_LOSS)    
-                
             else:
+                print ('Cancel did not work... Might have been sold before stop loss...')
                 return True
-                
+            
         elif status == 'FILLED':
             self.order_id = 0
-            self.order_data = ""
+            self.order_data = None
             print('Order filled')
-            return True
-        elif status == 'PARTIALLY_FILLED':
-            print('Order partially filled')
             return True
         else:
             return False
@@ -273,9 +291,8 @@ class Trading():
                  
     def action(self, symbol):
 
-        print ('increasing:%.8f' % (self.increasing))
-        print ('decreasing:%.8f' % (self.decreasing))
-        exit(1)
+        self.is_thread_open = True
+        
         # Order amount
         quantity = self.quantity
         
@@ -293,7 +310,7 @@ class Trading():
 
         # Spread ( profit )
         profitableSellingPrice = self.calc(lastBid)
-
+        
         # Check working mode
         if self.option.mode == 'range':
 
@@ -334,6 +351,7 @@ class Trading():
             sellAction = threading.Thread(target=self.sell, args=(symbol, quantity, self.order_id, profitableSellingPrice, lastPrice,))
             sellAction.start()
             
+            self.is_thread_open = False
             return
 
         '''
@@ -350,7 +368,9 @@ class Trading():
                 # Perform check/sell action
                 # checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
                 # checkAction.start()
-    
+                
+        self.is_thread_open = False
+        
     def logic(self):
         return 0
         
@@ -390,7 +410,7 @@ class Trading():
 
         # Format quantity
         self.step_size = stepSize
-                
+
         # If option increasing default tickSize greater than
         if (float(self.option.increasing) < tickSize):
             self.increasing = tickSize
@@ -398,6 +418,18 @@ class Trading():
         # If option decreasing default tickSize greater than
         if (float(self.option.decreasing) < tickSize):
             self.decreasing = tickSize
+        
+        # Order amount
+        if self.quantity == 0:
+    
+            # Order book prices
+            lastBid, lastAsk = Orders.get_order_book(symbol)
+
+            # Calculate amount to quantity
+            quantity = float(self.amount / lastBid)
+            
+            # Set global varible
+            self.quantity = quantity
         
         # Just for validation
         price = lastPrice
@@ -450,10 +482,12 @@ class Trading():
 
            startTime = time.time()
            
-           actionTrader = threading.Thread(target=self.action, args=(symbol,))
-           actions.append(actionTrader)
-           actionTrader.start()
-     
+           if not self.is_thread_open:
+       
+               actionTrader = threading.Thread(target=self.action, args=(symbol,))
+               actions.append(actionTrader)
+               actionTrader.start()
+
            endTime = time.time()
 
            if endTime - startTime < self.wait_time:

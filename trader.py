@@ -12,12 +12,12 @@ if __name__ == '__main__':
     
     # Set parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--quantity', type=float, help='Buy/Sell Quantity', default=200)
+    parser.add_argument('--quantity', type=float, help='Buy/Sell Quantity', default=0)
     parser.add_argument('--symbol', type=str, help='Market Symbol (Ex: XVGBTC)', required=True)
     parser.add_argument('--profit', type=float, help='Target Profit', default=1.3)
-
-    # Stop-Loss (Todo: Not complated)
-    parser.add_argument('--stoploss', type=float, help='Target Stop-Loss % (If the price drops by 6%, sell market_price.)', default=0) 
+    parser.add_argument('--amount', type=float, help='Buy/Sell Amount', default=0.0022)
+    
+    parser.add_argument('--stoploss', type=float, help='Target Stop-Loss % (If the price drops by 1%, sell market_price.)', default=1) 
 
     parser.add_argument('--increasing', type=float, help='Buy Price +Increasing (0.00000001)', default=0.00000001)
     parser.add_argument('--decreasing', type=float, help='Sell Price -Decreasing (0.00000001)', default=0.00000001)
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     # Manually defined --orderid try to sell 
     parser.add_argument('--orderid', type=int, help='Target Order Id (use balance.py)', default=0)
 
-    parser.add_argument('--wait_time', type=int, help='Wait Time (seconds)', default=1)
+    parser.add_argument('--wait_time', type=float, help='Wait Time (seconds)', default=0.7)
     parser.add_argument('--test_mode', type=bool, help='Test Mode True/False', default=False)
     parser.add_argument('--prints', type=bool, help='Scanning Profit Screen Print True/False', default=True)
     parser.add_argument('--debug', type=bool, help='Debug True/False', default=True)
