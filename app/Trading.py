@@ -48,7 +48,10 @@ class Trading():
         self.order_id = self.option.orderid
         self.quantity = self.option.quantity
         self.wait_time = self.option.wait_time
-        self.stop_loss = self.option.stoploss  
+        self.stop_loss = self.option.stoploss
+        
+        self.increasing = self.option.increasing
+        self.decreasing = self.option.decreasing
     
     def buy(self, symbol, quantity, buyPrice):
         
@@ -280,10 +283,10 @@ class Trading():
         lastBid, lastAsk = Orders.get_order_book(symbol)
     
         # Target buy price, add little increase #87
-        buyPrice = lastBid + self.option.increasing
+        buyPrice = lastBid + self.increasing
     
         # Target sell price, decrease little 
-        sellPrice = lastAsk - self.option.decreasing 
+        sellPrice = lastAsk - self.decreasing 
         
         # Spread ( profit )
         profitableSellingPrice = self.calc(lastBid)
@@ -376,7 +379,14 @@ class Trading():
         minPrice = float(self.filters()['filters']['PRICE_FILTER']['minPrice'])
         minNotional = float(self.filters()['filters']['MIN_NOTIONAL']['minNotional'])
 
+        #stepSize defines the intervals that a quantity/icebergQty can be increased/decreased by.
         stepSize = float(self.filters()['filters']['LOT_SIZE']['stepSize'])
+        
+        #tickSize defines the intervals that a price/stopPrice can be increased/decreased by
+        tickSize = float(self.filters()['filters']['PRICE_FILTER']['tickSize'])
+        
+        self.increasing = tickSize
+        self.decreasing = tickSize
         
         price = lastPrice
         notional = lastPrice * quantity
@@ -391,7 +401,7 @@ class Trading():
         if price < minPrice:
             print ("Invalid price, minPrice: %.8f (u: %.8f)" % (minQty, price))
             valid = False
-        
+
         # minNotional = minimum order value (price * quantity)
         if notional < minNotional:
             print ("Invalid notional, minNotional: %.8f (u: %.8f)" % (minNotional, notional))
