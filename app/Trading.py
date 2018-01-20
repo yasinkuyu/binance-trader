@@ -153,7 +153,7 @@ class Trading():
         else:
             print ('We apologize... Cant sell even at loss... Please sell manually... Stopping program...')
             self.cancel(symbol, sell_id)
-            exit(1)
+            quit()
 
     def stop(self, symbol, quantity, orderId, sell_price):
         # If the target is not reached, stop-loss.
