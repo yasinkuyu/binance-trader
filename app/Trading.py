@@ -11,6 +11,7 @@ import threading
 # Define Custom imports
 from Database import Database
 from Orders import Orders
+from Tools import Tools
 
 class Trading():
 
@@ -44,6 +45,7 @@ class Trading():
     WAIT_TIME_CHECK_BUY = 0.2 # seconds
     WAIT_TIME_CHECK_SELL = 5 # seconds
     WAIT_TIME_STOP_LOSS = 20 # seconds
+
     MAX_TRADE_SIZE = 7 # int
 
     def __init__(self, option):
@@ -60,11 +62,14 @@ class Trading():
         # Buy amount
         self.amount = self.option.amount
         
+        #BTC amount
+        self.amount = self.option.amount
+        
         self.increasing = self.option.increasing
         self.decreasing = self.option.decreasing
     
     def buy(self, symbol, quantity, buyPrice):
-        
+
         # Do you have an open order?
         self.checkorder()
 
@@ -145,6 +150,7 @@ class Trading():
         '''
 
         if self.stop(symbol, quantity, sell_id, sell_price):
+
             if Orders.get_order(symbol, sell_id)['status'] != 'FILLED':
                 print ('We apologize... Sold at loss...')
             self.order_id = 0
@@ -293,43 +299,22 @@ class Trading():
         if self.order_id > 0:
             exit(1)
 
-    def getExponentialToFLoat(self, flt):
-        # Convert exponential form of float to decimal places
-        was_neg = False
-        if not ("e" in str(flt)):
-            return flt
-        if str(flt).startswith('-'):
-            flt = flt[1:]
-            was_neg = True 
-        str_vals = str(flt).split('e')
-        coef = float(str_vals[0])
-        exp = int(str_vals[1])
-        return_val = ''
-        if int(exp) > 0:
-            return_val += str(coef).replace('.', '')
-            return_val += ''.join(['0' for _ in range(0, abs(exp - len(str(coef).split('.')[1])))])
-        elif int(exp) < 0:
-            return_val += '0.'
-            return_val += ''.join(['0' for _ in range(0, abs(exp) - 1)])
-            return_val += str(coef).replace('.', '')
-        if was_neg:
-            return_val='-'+return_val
-        return return_val
-
     def set_satoshi_count(self, lastPrice, lastBid, lastAsk):
-        # Compare decimal places and use the largest for satoshi_count
-        sats1 = int(str(self.getExponentialToFLoat(lastPrice))[::-1].find('.'))
-        sats2 = int(str(self.getExponentialToFLoat(lastBid))[::-1].find('.'))
-        sats3 = int(str(self.getExponentialToFLoat(lastAsk))[::-1].find('.'))
+        # Compare decimal places and use the largest for satoshiCount
+        sats1 = int(str(Tools.e2f(lastPrice))[::-1].find('.'))
+        sats2 = int(str(Tools.e2f(lastBid))[::-1].find('.'))
+        sats3 = int(str(Tools.e2f(lastAsk))[::-1].find('.'))
         integers = [sats1, sats2, sats3]
         newCount = max(integers)
-        if self.satoshi_count < newCount:
-            self.satoshi_count = newCount
+        if self.satoshiCount < newCount:
+            self.satoshiCount = newCount
 
     def action(self, symbol):
 
-        # Prevents program to start another thread
         self.is_thread_open = True
+        
+        # Order amount
+        quantity = self.quantity
 
         # Fetches the ticker price
         lastPrice = Orders.get_ticker(symbol)
@@ -339,18 +324,19 @@ class Trading():
 
         # Target buy price, add little increase #87
         buyPrice = lastBid + (lastBid * self.increasing / 100)
-    
+
         # Target sell price, decrease little 
         sellPrice = lastAsk - (lastAsk * self.decreasing / 100) 
 
         # Spread ( profit )
         profitableSellingPrice = self.calc(lastBid)
 
-        # Format buy/sell price according to Binance restriction
+        # Format sell price according to Binance restriction
         self.set_satoshi_count(lastPrice, lastBid, lastAsk)
-        buyPrice = round(buyPrice, self.satoshi_count)
-        sellPrice = round(sellPrice, self.satoshi_count)
-        profitableSellingPrice = round(profitableSellingPrice, self.satoshi_count)
+
+        buyPrice = round(buyPrice, self.satoshiCount)
+        sellPrice = round(sellPrice, self.satoshiCount)
+        profitableSellingPrice = round(profitableSellingPrice, self.satoshiCount)
 
         # Order amount
         if self.quantity > 0:
@@ -403,6 +389,7 @@ class Trading():
             # Perform buy action
             sellAction = threading.Thread(target=self.sell, args=(symbol, quantity, self.order_id, profitableSellingPrice, lastPrice,))
             sellAction.start()
+
             self.is_thread_open = False
             return
 
@@ -444,20 +431,25 @@ class Trading():
 
     def validate(self):
 
-        symbol = self.option.symbol
-
         valid = True
+        symbol = self.option.symbol
+        filters = self.filters()['filters']
 
         lastPrice = Orders.get_ticker(symbol)
 
+        minQty = float(filters['LOT_SIZE']['minQty'])
+        minPrice = float(filters['PRICE_FILTER']['minPrice'])
+        minNotional = float(filters['MIN_NOTIONAL']['minNotional'])
+        quantity = float(self.option.quantity)
+        
         if self.quantity > 0:
-            quantity = float(self.option.quantity)
+            quantity = float(self.quantity)
         else:
             lastBid, lastAsk = Orders.get_order_book(symbol)
             quantity = self.amount / lastBid
-            satsQuantity1 = int(str(self.getExponentialToFLoat(lastBid))[::-1].find('.'))
-            satsQuantity2 = int(str(self.getExponentialToFLoat(lastAsk))[::-1].find('.'))
-            satsQuantity3 = int(str(self.getExponentialToFLoat(lastPrice))[::-1].find('.'))
+            satsQuantity1 = int(str(Tools.e2f(lastBid))[::-1].find('.'))
+            satsQuantity2 = int(str(Tools.e2f(lastAsk))[::-1].find('.'))
+            satsQuantity3 = int(str(Tools.e2f(lastPrice))[::-1].find('.'))
             integer = [satsQuantity1, satsQuantity2, satsQuantity3]
             satsQuantity = max(integer)
 
@@ -468,16 +460,26 @@ class Trading():
             else:
                 quantity = int(round(quantity))
 
-        minQty = float(self.filters()['filters']['LOT_SIZE']['minQty'])
-        minPrice = float(self.filters()['filters']['PRICE_FILTER']['minPrice'])
-        minNotional = float(self.filters()['filters']['MIN_NOTIONAL']['minNotional'])
+        # stepSize defines the intervals that a quantity/icebergQty can be increased/decreased by.
+        stepSize = float(filters['LOT_SIZE']['stepSize'])
 
-        stepSize = float(self.filters()['filters']['LOT_SIZE']['stepSize'])
+        # tickSize defines the intervals that a price/stopPrice can be increased/decreased by
+        tickSize = float(filters['PRICE_FILTER']['tickSize'])
 
+        # Format quantity
+        self.step_size = stepSize
+
+        # If option increasing default tickSize greater than
+        if (float(self.option.increasing) < tickSize):
+            self.increasing = tickSize
+        
+        # If option decreasing default tickSize greater than
+        if (float(self.option.decreasing) < tickSize):
+            self.decreasing = tickSize
+        
+        # Just for validation
         price = lastPrice
         notional = lastPrice * quantity
-
-        self.step_size = stepSize
 
         # minQty = minimum order quantity
         if quantity < minQty:
@@ -527,9 +529,10 @@ class Trading():
            startTime = time.time()
 
            if not self.is_thread_open:
-            actionTrader = threading.Thread(target=self.action, args=(symbol,))
-            actions.append(actionTrader)
-            actionTrader.start()
+
+               actionTrader = threading.Thread(target=self.action, args=(symbol,))
+               actions.append(actionTrader)
+               actionTrader.start()
 
            endTime = time.time()
 
