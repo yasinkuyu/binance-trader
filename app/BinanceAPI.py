@@ -138,10 +138,7 @@ class BinanceAPI:
         return params
 
     def _format(self, price):
-        if float(price) < 0.1:
-            return "{:.8f}".format(price)
-        else:
-            return "{:.3f}".format(price)
+        return "{:.8f}".format(price)
             
     def _delete(self, path, params={}):
         params.update({"recvWindow": 120000})
