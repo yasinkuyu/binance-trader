@@ -300,19 +300,19 @@ class Trading():
             exit(1)
 
     def set_satoshi_count(self, lastPrice, lastBid, lastAsk):
-        # Compare decimal places and use the largest for satoshiCount
+        # Compare decimal places and use the largest for set_satoshi_count
         sats1 = int(str(Tools.e2f(lastPrice))[::-1].find('.'))
         sats2 = int(str(Tools.e2f(lastBid))[::-1].find('.'))
         sats3 = int(str(Tools.e2f(lastAsk))[::-1].find('.'))
         integers = [sats1, sats2, sats3]
         newCount = max(integers)
-        if self.satoshiCount < newCount:
-            self.satoshiCount = newCount
+        if self.satoshi_count < newCount:
+            self.satoshi_count = newCount
 
     def action(self, symbol):
 
         self.is_thread_open = True
-        
+
         # Order amount
         quantity = self.quantity
 
@@ -326,7 +326,7 @@ class Trading():
         buyPrice = lastBid + (lastBid * self.increasing / 100)
 
         # Target sell price, decrease little 
-        sellPrice = lastAsk - (lastAsk * self.decreasing / 100) 
+        sellPrice = lastAsk - (lastAsk * self.decreasing / 100)
 
         # Spread ( profit )
         profitableSellingPrice = self.calc(lastBid)
@@ -334,9 +334,9 @@ class Trading():
         # Format sell price according to Binance restriction
         self.set_satoshi_count(lastPrice, lastBid, lastAsk)
 
-        buyPrice = round(buyPrice, self.satoshiCount)
-        sellPrice = round(sellPrice, self.satoshiCount)
-        profitableSellingPrice = round(profitableSellingPrice, self.satoshiCount)
+        buyPrice = round(buyPrice, self.satoshi_count)
+        sellPrice = round(sellPrice, self.satoshi_count)
+        profitableSellingPrice = round(profitableSellingPrice, self.satoshi_count)
 
         # Order amount
         if self.quantity > 0:
@@ -515,7 +515,7 @@ class Trading():
 
            if self.option.buyprice == 0 or self.option.sellprice == 0:
                print ('Plese enter --buyprice / --sellprice\n')
-               exit(1)
+               quit()
 
            print ('Wait buyprice:%.8f sellprice:%.8f' % (self.option.buyprice, self.option.sellprice))
 
