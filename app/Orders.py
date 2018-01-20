@@ -53,11 +53,10 @@ class Orders():
 
     @staticmethod
     def cancel_order(symbol, orderId):
-    
-        try:
-
-            order = client.cancel(symbol, orderId)
         
+        try:
+            
+            order = client.cancel(symbol, orderId)
             if 'msg' in order:
                 Messages.get(order['msg'])
             
@@ -90,7 +89,8 @@ class Orders():
             order = client.query_order(symbol, orderId)
 
             if 'msg' in order:
-                Messages.get(order['msg'])
+                return False
+                Messages.get(order['msg']) # TODO
 
             return order
 
@@ -136,3 +136,15 @@ class Orders():
             
         except Exception as e:
             return
+
+    @staticmethod
+    def get_balance(symbol="BTC"):
+        try:
+
+            balances = client.get_account()
+            balances['balances'] = {item['asset']: item for item in balances['balances']}
+
+            return balances['balances'][symbol]['free']
+
+        except Exception as e:
+            print ('gb: %s' % (e))

@@ -13,12 +13,12 @@ if __name__ == '__main__':
     # Set parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--quantity', type=float, help='Buy/Sell Quantity', default=0)
-    parser.add_argument('--symbol', type=str, help='Market Symbol (Ex: XVGBTC)', required=True)
-    parser.add_argument('--profit', type=float, help='Target Profit', default=3)
-    parser.add_argument('--amount', type=float, help='Buy/Sell Amount', default=0.0022)
+    parser.add_argument('--symbol', type=str, help='Market Symbol (Ex: XVGBTC - XVGETH)', required=True)
+    parser.add_argument('--profit', type=float, help='Target Profit', default=2)
+    parser.add_argument('--amount', type=float, help='Buy/Sell BTC Amount (Ex: 0.002 BTC', default=0.0022)
+    parser.add_argument('--max_amount', type=float, help='Buy/Sell with max BTC amount True/False', default=False)
 
-    # Stop-Loss
-    parser.add_argument('--stoploss', type=float, help='Target Stop-Loss % (If the price drops by 1%, sell market_price.)', default=1) 
+    parser.add_argument('--stop_loss', type=float, help='Target Stop-Loss % (If the price drops by 6%, sell market_price.)', default=0) 
 
     parser.add_argument('--increasing', type=float, help='Buy Price +Increasing 0.2%', default=0.2)
     parser.add_argument('--decreasing', type=float, help='Sell Price -Decreasing 0.2%', default=0.2)
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     parser.add_argument('--loop', type=int, help='Loop (0 unlimited)', default=0)
 
     # Working Modes
-    #  - profit: Find defined profit, buy and sell. (Hunter Mode) (Ex: 1.3% profit)
+    #  - profit: Profit Hunter. Find defined profit, buy and sell. (Ex: 1.3% profit)
     #  - range: Between target two price, buy and sell. (Ex: <= 0.00100 buy - >= 0.00150 sell )
     parser.add_argument('--mode', type=str, help='Working Mode', default='profit')
     parser.add_argument('--buyprice', type=float, help='Buy Price (Price is greater than equal <=)', default=0)
