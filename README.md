@@ -46,17 +46,23 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
     
     # Profit mode (default)
     python trader.py --symbol XVGBTC --quantity 200 --profit 1.3
+    or by amount
+    python trader.py --symbol XVGBTC --amount 0.0022 --profit 3
     
     # Range mode
     python trader.py --symbol XVGBTC --mode range --quantity 260 --buyprice 0.00000780 --sellprice 0.00000790
+    or by amount
+    python trader.py --symbol XVGBTC --mode range --amount 0.0022 --buyprice 0.00000780 --sellprice 0.00000790
     
-    --quantity     Buy/Sell Quantity (default 200)
-    --symbol       Market Symbol (default XVGBTC)
-    --profit       Target Profit (default 1.3)
+    --quantity     Buy/Sell Quantity (default 0)
+    --amount       Buy/Sell Amount (default 0.0022)
+    --symbol       Market Symbol ex XVGBTC or TRXETH
+    --profit       Target Profit (default 1.3) *Percentage
+    --stoploss     Decrease sell price at loss (default 1) *Percentage
     --orderid      Target Order Id (default 0)
-    --wait_time    Wait Time (seconds) (default 1)
-    --increasing   Buy Price Increasing  +(default 0.00000001)
-    --decreasing   Sell Price Decreasing -(default 0.00000001)
+    --wait_time    Wait Time (seconds) (default 0.7)
+    --increasing   Buy Price Increasing  +(default 0.2) *Percentage
+    --decreasing   Sell Price Decreasing -(default 0.2) *Percentage
     --prints       Scanning Profit Screen Print (default True)
     --loop         Loop (default 0 unlimited)
     
@@ -79,7 +85,7 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
     
     Variations;
         trader.py --symbol TBNBTC --quantity 50 --profit 3
-        trader.py --symbol NEOBTC --quantity 3 --profit 1.1
+        trader.py --symbol NEOBTC --amount 0.1 --profit 1.1
         trader.py --symbol ETHUSDT --quantity 0.3 --profit 1.5
         ...
     
@@ -136,6 +142,12 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
     Code released under the MIT License.
 
 #### Tip Box
-[Wallets](http://yasinkuyu.net/wallet) 
+[Yasin](http://yasinkuyu.net/wallet) 
+
+#### WeSpeakCrypto
+
+    BTC wallet: 182Ew6JK9Mspw4BszdBP7RgpdWf6STe46G
+    LTC wallet: LXgNmMPied4AiGKAsE1kY2M9BRaV3yxDC1
+    ETH wallet: 0xed8100b70e15d9fcd53f1d989c67775bf55e4475
 
 ---

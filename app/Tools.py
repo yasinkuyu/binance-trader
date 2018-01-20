@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 # @yasinkuyu
 
-class tools():
+class Tools():
      
     @staticmethod
     def e2f(flt):
