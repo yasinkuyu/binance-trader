@@ -49,22 +49,20 @@ class Trading():
     MAX_TRADE_SIZE = 7 # int
 
     def __init__(self, option):
-                
+
         # Get argument parse options
         self.option = option
-        
+
         # Define parser vars
         self.order_id = self.option.orderid
         self.quantity = self.option.quantity
         self.wait_time = self.option.wait_time
         self.stop_loss = self.option.stop_loss
+        self.max_amount = self.option.max_amount
 
-        # Buy amount
-        self.amount = self.option.amount
-        
         #BTC amount
         self.amount = self.option.amount
-        
+
         self.increasing = self.option.increasing
         self.decreasing = self.option.decreasing
     
@@ -362,7 +360,10 @@ class Trading():
         if self.quantity > 0:
             quantity = self.quantity
         else:
-            quantity = self.amount / lastBid
+            if self.max_amount:
+                self.amount = float(Orders.get_balance("BTC"))
+
+            quantity = self.amount / buyPrice
             if self.satoshi_count <= 6:
                 quantity = round(quantity, 3)
             elif self.satoshi_count <= 7:
@@ -461,17 +462,16 @@ class Trading():
         minPrice = float(filters['PRICE_FILTER']['minPrice'])
         minNotional = float(filters['MIN_NOTIONAL']['minNotional'])
         quantity = float(self.option.quantity)
-        
+
         if self.quantity > 0:
             quantity = float(self.quantity)
         else:
+            if self.max_amount:
+                self.amount = float(Orders.get_balance("BTC"))
+
             lastBid, lastAsk = Orders.get_order_book(symbol)
             quantity = self.amount / lastBid
-            satsQuantity1 = int(str(Tools.e2f(lastBid))[::-1].find('.'))
-            satsQuantity2 = int(str(Tools.e2f(lastAsk))[::-1].find('.'))
-            satsQuantity3 = int(str(Tools.e2f(lastPrice))[::-1].find('.'))
-            integer = [satsQuantity1, satsQuantity2, satsQuantity3]
-            satsQuantity = max(integer)
+            satsQuantity = self.set_satoshi_count(lastBid, lastAsk, lastPrice)
 
             if satsQuantity <= 6:
                 quantity = round(quantity, 3)

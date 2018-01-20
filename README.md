@@ -56,9 +56,10 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
     
     --quantity     Buy/Sell Quantity (default 0)
     --amount       Buy/Sell BTC Amount (default 0.0022)
+    --max_amount   Buy/Sell using max BTC amount (default False)
     --symbol       Market Symbol (Ex. XVGBTC or TRXETH)
     --profit       Target Profit Percentage (default 2)
-    --stoploss     Decrease sell price at loss Percentage (default 1)
+    --stop_loss    Decrease sell price at loss Percentage (default 1)
     --orderid      Target Order Id (default 0)
     --wait_time    Wait Time (seconds) (default 0.7)
     --increasing   Buy Price Increasing Percentage  +(default 0.2)
@@ -79,10 +80,14 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
         XXXUSDT (Tether)
 
     All binance symbols are supported.
-    
+
     Every coin can be different in --profit and --quantity.
+
     If quantity is empty --quantity is automatically calculated to the minimum qty.
-    
+    If --stop_loss is 0. It will hold the coin until it's sold with the desired amount.
+
+    Set --max_amount True to use all BTC amount upon setting buy order
+
     Variations;
         trader.py --symbol TBNBTC --quantity 50 --profit 3
         trader.py --symbol NEOBTC --amount 0.1 --profit 1.1

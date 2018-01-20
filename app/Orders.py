@@ -136,3 +136,15 @@ class Orders():
             
         except Exception as e:
             return
+
+    @staticmethod
+    def get_balance(symbol="BTC"):
+        try:
+
+            balances = client.get_account()
+            balances['balances'] = {item['asset']: item for item in balances['balances']}
+
+            return balances['balances'][symbol]['free']
+
+        except Exception as e:
+            print ('gb: %s' % (e))
