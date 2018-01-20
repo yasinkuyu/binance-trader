@@ -111,8 +111,8 @@ class Trading():
                 print ("Buy order partially filled... Try sell... Cancel remaining buy...")
                 self.cancel(symbol, orderId)
             else:
-                print ("Buy order failed... Cancel order...")
                 self.cancel(symbol, orderId)
+                print ("Buy order failed... Cancel order...")
                 self.order_id = 0
                 self.is_thread_open = False
                 return
@@ -131,7 +131,7 @@ class Trading():
 
         if sell_order['status'] == 'FILLED':
 
-            print ('Sell order (Filled) id: %d' % orderId)
+            print ('Sell order (Filled) id: %d' % sell_id)
             print ('LastPrice : %.8f' % last_price)
             print ('Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(buy_order['price']), sell_price))
 
@@ -141,25 +141,39 @@ class Trading():
 
             return
 
-        # If sell order failed after 5 seconds, 5 seconds more wait time before selling at loss
-        time.sleep(self.WAIT_TIME_CHECK_SELL)
-
         '''
         If all sales trials fail,
         the grievance is stop-loss.
         '''
 
-        if self.stop(symbol, quantity, sell_id, sell_price):
+        if stop_loss > 0:
 
-            if Orders.get_order(symbol, sell_id)['status'] != 'FILLED':
-                print ('We apologize... Sold at loss...')
-            self.order_id = 0
-            self.order_data = None
-            self.is_thread_open = False
+            # If sell order failed after 5 seconds, 5 seconds more wait time before selling at loss
+            time.sleep(self.WAIT_TIME_CHECK_SELL)
+
+            if self.stop(symbol, quantity, sell_id, sell_price):
+
+                if Orders.get_order(symbol, sell_id)['status'] != 'FILLED':
+                    print ('We apologize... Sold at loss...')
+
+            else:
+                print ('We apologize... Cant sell even at loss... Please sell manually... Stopping program...')
+                self.cancel(symbol, sell_id)
+                quit()
         else:
-            print ('We apologize... Cant sell even at loss... Please sell manually... Stopping program...')
-            self.cancel(symbol, sell_id)
-            quit()
+            sell_status = 'NEW'
+
+            while (sell_status != "FILLED"):
+                time.sleep(self.WAIT_TIME_CHECK_SELL)
+                sell_status = Orders.get_order(symbol, sell_id)['status']
+                lastPrice = Orders.get_ticker(symbol)
+                print ('Status: %s Current price: %.8f Sell price: %.8f' % (sell_status, lastPrice, sell_price))
+
+            print ('Sold! Continue trading...')
+
+        self.order_id = 0
+        self.order_data = None
+        self.is_thread_open = False
 
     def stop(self, symbol, quantity, orderId, sell_price):
         # If the target is not reached, stop-loss.
@@ -177,7 +191,7 @@ class Trading():
                 # Stop loss
                 lastBid, lastAsk = Orders.get_order_book(symbol)
 
-                if lastAsk <= lossprice:
+                if lastAsk >= lossprice:
 
                     sello = Orders.sell_market(symbol, quantity)
 
@@ -526,20 +540,19 @@ class Trading():
 
         while (cycle <= self.option.loop):
 
-           startTime = time.time()
+            if not self.is_thread_open:
+                startTime = time.time()
 
-           if not self.is_thread_open:
+                actionTrader = threading.Thread(target=self.action, args=(symbol,))
+                actions.append(actionTrader)
+                actionTrader.start()
 
-               actionTrader = threading.Thread(target=self.action, args=(symbol,))
-               actions.append(actionTrader)
-               actionTrader.start()
+                endTime = time.time()
 
-           endTime = time.time()
+                if endTime - startTime < self.wait_time:
 
-           if endTime - startTime < self.wait_time:
+                   time.sleep(self.wait_time - (endTime - startTime))
 
-               time.sleep(self.wait_time - (endTime - startTime))
-
-               # 0 = Unlimited loop
-               if self.option.loop > 0:
-                   cycle = cycle + 1
+                   # 0 = Unlimited loop
+                   if self.option.loop > 0:
+                       cycle = cycle + 1
