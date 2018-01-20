@@ -106,7 +106,7 @@ class Trading():
                 self.cancel(symbol, orderId)
             else:
                 self.cancel(symbol, orderId)
-                print ("Buy order failed... Cancel order...")
+                print ("Buy order fail (Not filled) Cancel order...")
                 self.order_id = 0
                 return
 
@@ -273,9 +273,15 @@ class Trading():
                 trading_size += 1
                 continue
             
-    def cancel(self,symbol, orderId):
+    def cancel(self, symbol, orderId):
         # If order is not filled, cancel it.
         check_order = Orders.get_order(symbol, orderId)
+        
+        if not check_order:
+            self.order_id = 0
+            self.order_data = None
+            return True
+            
         if check_order['status'] == 'NEW' or check_order['status'] != "CANCELLED":
             Orders.cancel_order(symbol, orderId)
             self.order_id = 0
@@ -319,8 +325,8 @@ class Trading():
         # Check working mode
         if self.option.mode == 'range':
 
-            buyPrice = self.option.buyprice
-            sellPrice = self.option.sellprice
+            buyPrice = float(self.option.buyprice)
+            sellPrice = float(self.option.sellprice)
             profitableSellingPrice = sellPrice
     
         # Screen log
@@ -364,7 +370,7 @@ class Trading():
         buy with my buy price,    
         '''
         if (lastAsk >= profitableSellingPrice and self.option.mode == 'profit') or \
-           (lastPrice <= self.option.buyprice and self.option.mode == 'range'):
+           (lastPrice <= float(self.option.buyprice) and self.option.mode == 'range'):
                        
             if self.order_id == 0:
                 self.buy(symbol, quantity, buyPrice)
@@ -466,7 +472,7 @@ class Trading():
             exit(1)
              
     def run(self):
-        
+
         cycle = 0
         actions = []
 

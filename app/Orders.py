@@ -53,11 +53,10 @@ class Orders():
 
     @staticmethod
     def cancel_order(symbol, orderId):
-    
-        try:
-
-            order = client.cancel(symbol, orderId)
         
+        try:
+            
+            order = client.cancel(symbol, orderId)
             if 'msg' in order:
                 Messages.get(order['msg'])
             
@@ -90,7 +89,8 @@ class Orders():
             order = client.query_order(symbol, orderId)
 
             if 'msg' in order:
-                Messages.get(order['msg'])
+                return False
+                Messages.get(order['msg']) # TODO
 
             return order
 
