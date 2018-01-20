@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('--amount', type=float, help='Buy/Sell Amount', default=0.0022)
 
     # Stop-Loss
-    parser.add_argument('--stoploss', type=float, help='Target Stop-Loss % (If the price drops by 6%, sell market_price.)', default=1) 
+    parser.add_argument('--stoploss', type=float, help='Target Stop-Loss % (If the price drops by 1%, sell market_price.)', default=1) 
 
     parser.add_argument('--increasing', type=float, help='Buy Price +Increasing 0.2%', default=0.2)
     parser.add_argument('--decreasing', type=float, help='Sell Price -Decreasing 0.2%', default=0.2)

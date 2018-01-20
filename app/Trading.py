@@ -59,7 +59,10 @@ class Trading():
 
         # Buy amount
         self.amount = self.option.amount
-
+        
+        self.increasing = self.option.increasing
+        self.decreasing = self.option.decreasing
+    
     def buy(self, symbol, quantity, buyPrice):
         
         # Do you have an open order?
@@ -313,7 +316,7 @@ class Trading():
             return_val='-'+return_val
         return return_val
 
-    def setSatoshiCount(self, lastPrice, lastBid, lastAsk):
+    def set_satoshi_count(self, lastPrice, lastBid, lastAsk):
         # Compare decimal places and use the largest for satoshi_count
         sats1 = int(str(self.getExponentialToFLoat(lastPrice))[::-1].find('.'))
         sats2 = int(str(self.getExponentialToFLoat(lastBid))[::-1].find('.'))
@@ -335,16 +338,16 @@ class Trading():
         lastBid, lastAsk = Orders.get_order_book(symbol)
 
         # Target buy price, add little increase #87
-        buyPrice = lastBid + (lastBid * self.option.increasing / 100)
-
+        buyPrice = lastBid + (lastBid * self.increasing / 100)
+    
         # Target sell price, decrease little 
-        sellPrice = lastAsk - (lastAsk * self.option.decreasing / 100)
+        sellPrice = lastAsk - (lastAsk * self.decreasing / 100) 
 
         # Spread ( profit )
         profitableSellingPrice = self.calc(lastBid)
 
         # Format buy/sell price according to Binance restriction
-        self.setSatoshiCount(lastPrice, lastBid, lastAsk)
+        self.set_satoshi_count(lastPrice, lastBid, lastAsk)
         buyPrice = round(buyPrice, self.satoshi_count)
         sellPrice = round(sellPrice, self.satoshi_count)
         profitableSellingPrice = round(profitableSellingPrice, self.satoshi_count)
