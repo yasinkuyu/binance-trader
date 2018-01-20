@@ -1,4 +1,4 @@
-# Binance Trader (RC 1)
+# Binance Trader (RC 2)
 
 This is an experimental bot for auto trading the binance.com exchange. [@yasinkuyu](https://twitter.com/yasinkuyu)
 
@@ -45,29 +45,29 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
     Example parameters
     
     # Profit mode (default)
-    python trader.py --symbol XVGBTC --quantity 200 --profit 1.3
+    python trader.py --symbol XVGBTC --quantity 300 --profit 1.3
     or by amount
     python trader.py --symbol XVGBTC --amount 0.0022 --profit 3
     
     # Range mode
-    python trader.py --symbol XVGBTC --mode range --quantity 260 --buyprice 0.00000780 --sellprice 0.00000790
+    python trader.py --symbol XVGBTC --mode range --quantity 300 --buyprice 0.00000780 --sellprice 0.00000790
     or by amount
     python trader.py --symbol XVGBTC --mode range --amount 0.0022 --buyprice 0.00000780 --sellprice 0.00000790
     
     --quantity     Buy/Sell Quantity (default 0)
-    --amount       Buy/Sell Amount (default 0.0022)
-    --symbol       Market Symbol ex XVGBTC or TRXETH
-    --profit       Target Profit (default 1.3) *Percentage
-    --stoploss     Decrease sell price at loss (default 1) *Percentage
+    --amount       Buy/Sell BTC Amount (default 0.0022)
+    --symbol       Market Symbol (Ex. XVGBTC or TRXETH)
+    --profit       Target Profit Percentage (default 2)
+    --stoploss     Decrease sell price at loss Percentage (default 1)
     --orderid      Target Order Id (default 0)
     --wait_time    Wait Time (seconds) (default 0.7)
-    --increasing   Buy Price Increasing  +(default 0.2) *Percentage
-    --decreasing   Sell Price Decreasing -(default 0.2) *Percentage
+    --increasing   Buy Price Increasing Percentage  +(default 0.2)
+    --decreasing   Sell Price Decreasing Percentage -(default 0.2)
     --prints       Scanning Profit Screen Print (default True)
     --loop         Loop (default 0 unlimited)
     
     --mode         Working modes profit or range (default profit)
-                   profit: Find defined profit, buy and sell. (Ex: 1.3% profit)
+                   profit: Profit Hunter. Find defined profit, buy and sell. (Ex: 1.3% profit)
                    range: Between target two price, buy and sell. (Ex: <= 0.00000780 buy - >= 0.00000790 sell )
     --buyprice     Buy price (Ex: 0.00000780)
     --sellprice    Buy price (Ex: 0.00000790)
@@ -81,7 +81,7 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
     All binance symbols are supported.
     
     Every coin can be different in --profit and --quantity.
-    Total must be at least 0.002 
+    If quantity is empty --quantity is automatically calculated to the minimum qty.
     
     Variations;
         trader.py --symbol TBNBTC --quantity 50 --profit 3
@@ -136,6 +136,7 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
     - October 7, 2017 Beta
     - January 6, 2018 RC
     - January 15, 2018 RC 1
+    - January 20, 2018 RC 2
      
 ## License
 

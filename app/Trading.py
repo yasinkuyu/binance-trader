@@ -57,7 +57,7 @@ class Trading():
         self.order_id = self.option.orderid
         self.quantity = self.option.quantity
         self.wait_time = self.option.wait_time
-        self.stop_loss = self.option.stoploss
+        self.stop_loss = self.option.stop_loss
 
         # Buy amount
         self.amount = self.option.amount
@@ -112,7 +112,7 @@ class Trading():
                 self.cancel(symbol, orderId)
             else:
                 self.cancel(symbol, orderId)
-                print ("Buy order failed... Cancel order...")
+                print ("Buy order fail (Not filled) Cancel order...")
                 self.order_id = 0
                 self.is_thread_open = False
                 return
@@ -146,7 +146,7 @@ class Trading():
         the grievance is stop-loss.
         '''
 
-        if stop_loss > 0:
+        if self.stop_loss > 0:
 
             # If sell order failed after 5 seconds, 5 seconds more wait time before selling at loss
             time.sleep(self.WAIT_TIME_CHECK_SELL)
@@ -293,6 +293,12 @@ class Trading():
     def cancel(self,symbol, orderId):
         # If order is not filled, cancel it.
         check_order = Orders.get_order(symbol, orderId)
+        
+        if not check_order:
+            self.order_id = 0
+            self.order_data = None
+            return True
+            
         if check_order['status'] == 'NEW' or check_order['status'] != "CANCELLED":
             Orders.cancel_order(symbol, orderId)
             self.order_id = 0
@@ -367,8 +373,8 @@ class Trading():
         # Check working mode
         if self.option.mode == 'range':
 
-            buyPrice = self.option.buyprice
-            sellPrice = self.option.sellprice
+            buyPrice = float(self.option.buyprice)
+            sellPrice = float(self.option.sellprice)
             profitableSellingPrice = sellPrice
 
         # Screen log
@@ -414,7 +420,7 @@ class Trading():
         '''
 
         if (lastAsk >= profitableSellingPrice and self.option.mode == 'profit') or \
-           (lastPrice <= self.option.buyprice and self.option.mode == 'range'):
+           (lastPrice <= float(self.option.buyprice) and self.option.mode == 'range'):
 
             if self.order_id == 0:
                 self.buy(symbol, quantity, buyPrice)
