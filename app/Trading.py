@@ -105,8 +105,8 @@ class Trading():
                 print ("Buy order partially filled... Try sell... Cancel remaining buy...")
                 self.cancel(symbol, orderId)
             else:
-                print ("Buy order failed... Cancel order...")
                 self.cancel(symbol, orderId)
+                print ("Buy order failed... Cancel order...")
                 self.order_id = 0
                 return
 
@@ -119,7 +119,7 @@ class Trading():
 
         if sell_order['status'] == 'FILLED':
 
-            print ('Sell order (Filled) Id: %d' % orderId)
+            print ('Sell order (Filled) Id: %d' % sell_id)
             print ('LastPrice : %.8f' % last_price)
             print ('Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(sell_order['price']), sell_price))
             
@@ -128,22 +128,35 @@ class Trading():
             
             return
 
-        time.sleep(self.WAIT_TIME_CHECK_SELL)
-
         '''
         If all sales trials fail, 
         the grievance is stop-loss.
         '''
+        
+        if self.stop_loss > 0:
 
-        if self.stop(symbol, quantity, sell_id, last_price):
-            if Orders.get_order(symbol, sell_id)['status'] != 'FILLED':
-                print ('We apologize... Sold at loss...')
+            # If sell order failed after 5 seconds, 5 seconds more wait time before selling at loss
+            time.sleep(self.WAIT_TIME_CHECK_SELL)
+            
+            if self.stop(symbol, quantity, sell_id, last_price):
+                
+                if Orders.get_order(symbol, sell_id)['status'] != 'FILLED':
+                    print ('We apologize... Sold at loss...')
+                    
+            else:
+                print ('We apologize... Cant sell even at loss... Please sell manually... Stopping program...')
+                self.cancel(symbol, sell_id)
+                exit(1)
+            
+            while (sell_status != "FILLED"):
+                time.sleep(self.WAIT_TIME_CHECK_SELL)
+                sell_status = Orders.get_order(symbol, sell_id)['status']
+                lastPrice = Orders.get_ticker(symbol)
+                print ('Status: %s Current price: %.8f Sell price: %.8f' % (sell_status, lastPrice, sell_price))
+                print ('Sold! Continue trading...')
+            
             self.order_id = 0
             self.order_data = None
-        else:
-            print ('We apologize... Cant sell even at loss... Please sell manually... Stopping program...')
-            self.cancel(symbol, sell_id)
-            exit(1)
             
     def stop(self, symbol, quantity, orderId, last_price):
         # If the target is not reached, stop-loss.
@@ -161,7 +174,7 @@ class Trading():
             if self.cancel(symbol, orderId):
         
                 # Stop loss
-                if last_price <= lossprice: 
+                if last_price >= lossprice: 
             
                     sello = Orders.sell_market(symbol, quantity)  
    
@@ -467,7 +480,7 @@ class Trading():
         # Validate symbol
         self.validate()
         
-        print ('Started... --quantity: %.8f' % (self.quantity))
+        print ('Started... --quantity: %.8f\n' % (self.quantity))
         
         if self.option.mode == 'range':
 
