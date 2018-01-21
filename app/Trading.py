@@ -17,13 +17,6 @@ class Trading():
 
     # Define trade vars
     order_id = 0
-    order_data = None
-
-    buy_filled = True
-    sell_filled = True
-
-    buy_filled_qty = 0
-    sell_filled_qty = 0
 
     # percent (When you drop 10%, sell panic.)
     stop_loss = 0
@@ -33,20 +26,16 @@ class Trading():
 
     # float(step_size * math.floor(float(free)/step_size))
     step_size = 0
+    tick_size = 0
 
-    # Satoshi decimal places count
-    satoshi_count = 0
-
-    # Checker for flood threading
-    is_thread_open = False
+    # Check bot status
+    bot_status = "scan"
 
     # Define static vars
     WAIT_TIME_BUY_SELL = 1 # seconds
-    WAIT_TIME_CHECK_BUY = 0.2 # seconds
+    WAIT_TIME_CHECK_BUY = 0.5 # seconds
     WAIT_TIME_CHECK_SELL = 5 # seconds
     WAIT_TIME_STOP_LOSS = 20 # seconds
-
-    MAX_TRADE_SIZE = 7 # int
 
     def __init__(self, option):
 
@@ -83,11 +72,14 @@ class Trading():
 
             self.order_id = orderId
 
+            self.bot_status = "buy"
+
             return orderId
 
         except Exception as e:
             print ('bl: %s' % (e))
             time.sleep(self.WAIT_TIME_BUY_SELL)
+            self.bot_status = "cancel"
             return None
 
     def sell(self, symbol, quantity, orderId, sell_price, last_price):
@@ -97,7 +89,13 @@ class Trading():
         If not successful, the order will be canceled.
         '''
 
-        buy_order = Orders.get_order(symbol, orderId)
+        try:
+
+            buy_order = Orders.get_order(symbol, orderId)
+
+        except Exception as e:
+            print ("SERVER DELAY!")
+            return
 
         if buy_order['status'] == 'FILLED' and buy_order['side'] == "BUY":
             print ("Buy order filled... Try sell...")
@@ -112,31 +110,24 @@ class Trading():
                 self.cancel(symbol, orderId)
                 print ("Buy order fail (Not filled) Cancel order...")
                 self.order_id = 0
-                self.is_thread_open = False
+                self.bot_status = "cancel"
                 return
 
-        # Format quantity
-        stepsize = quantity % float(self.step_size)
-        quantity = quantity - stepsize
+        sell_id = Orders.sell_limit(symbol, quantity, sell_price)['orderId']
 
-        sell_order = Orders.sell_limit(symbol, quantity, sell_price)
-
-        sell_id = sell_order['orderId']
         print ('Sell order create id: %d' % sell_id)
 
         # 5 seconds wait time before checking sell order
         time.sleep(self.WAIT_TIME_CHECK_SELL)
 
-        if sell_order['status'] == 'FILLED':
+        if Orders.get_order(symbol, sell_id)['status'] == 'FILLED':
 
             print ('Sell order (Filled) id: %d' % sell_id)
             print ('LastPrice : %.8f' % last_price)
             print ('Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(buy_order['price']), sell_price))
 
             self.order_id = 0
-            self.order_data = None
-            self.is_thread_open = False
-
+            self.bot_status = "sell"
             return
 
         '''
@@ -164,14 +155,13 @@ class Trading():
             while (sell_status != "FILLED"):
                 time.sleep(self.WAIT_TIME_CHECK_SELL)
                 sell_status = Orders.get_order(symbol, sell_id)['status']
-                lastPrice = Orders.get_ticker(symbol)
-                print ('Status: %s Current price: %.8f Sell price: %.8f' % (sell_status, lastPrice, sell_price))
+                lastPrice = float(Orders.get_ticker(symbol)['lastPrice'])
+                print ('Status: %s Current price: %s Sell price: %s' % (sell_status, lastPrice, sell_price))
 
             print ('Sold! Continue trading...')
 
         self.order_id = 0
-        self.order_data = None
-        self.is_thread_open = False
+        self.bot_status = "sell"
 
     def stop(self, symbol, quantity, orderId, sell_price):
         # If the target is not reached, stop-loss.
@@ -226,67 +216,10 @@ class Trading():
 
         elif status == 'FILLED':
             self.order_id = 0
-            self.order_data = None
             print('Order filled')
             return True
         else:
             return False
-
-    def check(self, symbol, orderId, quantity):
-        # If profit is available and there is no purchase from the specified price, take it with the market.
-
-        # Do you have an open order?
-        self.checkorder()
-
-        trading_size = 0
-        time.sleep(self.WAIT_TIME_BUY_SELL)
-
-        while trading_size < self.MAX_TRADE_SIZE:
-
-            # Order info
-            order = Orders.get_order(symbol, orderId)
-
-            side  = order['side']
-            price = float(order['price'])
-
-            # TODO: Sell partial qty
-            orig_qty = float(order['origQty']) 
-            self.buy_filled_qty = float(order['executedQty'])
-
-            status = order['status']
-
-            print ('Wait buy order: %s id:%d, price: %.8f, orig_qty: %.8f' % (symbol, order['orderId'], price, orig_qty))
-
-            if status == 'NEW':
-
-                if self.cancel(symbol, orderId):
-
-                    buyo = Orders.buy_market(symbol, quantity)
-
-                    print ('Buy market order')
-
-                    self.order_id = buyo['orderId']
-                    self.order_data = buyo
-
-                    if buyo == True:
-                        break
-                    else:
-                        trading_size += 1
-                        continue
-                else:
-                    break
-
-            elif status == 'FILLED':
-                self.order_id = order['orderId']
-                self.order_data = order
-                print ("Filled")
-                break
-            elif status == 'PARTIALLY_FILLED':
-                print ("Partial filled")
-                break
-            else:
-                trading_size += 1
-                continue
 
     def cancel(self,symbol, orderId):
         # If order is not filled, cancel it.
@@ -294,13 +227,11 @@ class Trading():
         
         if not check_order:
             self.order_id = 0
-            self.order_data = None
             return True
             
         if check_order['status'] == 'NEW' or check_order['status'] != "CANCELLED":
             Orders.cancel_order(symbol, orderId)
             self.order_id = 0
-            self.order_data = None
             return True
 
     def calc(self, lastBid):
@@ -317,28 +248,17 @@ class Trading():
         if self.order_id > 0:
             exit(1)
 
-    def set_satoshi_count(self, lastPrice, lastBid, lastAsk):
-        # Compare decimal places and use the largest for set_satoshi_count
-        sats1 = int(str(Tools.e2f(lastPrice))[::-1].find('.'))
-        sats2 = int(str(Tools.e2f(lastBid))[::-1].find('.'))
-        sats3 = int(str(Tools.e2f(lastAsk))[::-1].find('.'))
-        integers = [sats1, sats2, sats3]
-        newCount = max(integers)
-        if self.satoshi_count < newCount:
-            self.satoshi_count = newCount
-
     def action(self, symbol):
-
-        self.is_thread_open = True
 
         # Order amount
         quantity = self.quantity
 
         # Fetches the ticker price
-        lastPrice = Orders.get_ticker(symbol)
+        ticker = Orders.get_ticker(symbol)
 
-        # Order book prices
-        lastBid, lastAsk = Orders.get_order_book(symbol)
+        lastPrice = float(ticker['lastPrice'])
+        lastBid = float(ticker['bidPrice'])
+        lastAsk = float(ticker['askPrice'])
 
         # Target buy price, add little increase #87
         buyPrice = lastBid + (lastBid * self.increasing / 100)
@@ -349,12 +269,9 @@ class Trading():
         # Spread ( profit )
         profitableSellingPrice = self.calc(lastBid)
 
-        # Format sell price according to Binance restriction
-        self.set_satoshi_count(lastPrice, lastBid, lastAsk)
-
-        buyPrice = round(buyPrice, self.satoshi_count)
-        sellPrice = round(sellPrice, self.satoshi_count)
-        profitableSellingPrice = round(profitableSellingPrice, self.satoshi_count)
+        # Format Buy /Sell price according to Binance restriction
+        buyPrice = round(buyPrice, self.tick_size)
+        sellPrice = round(sellPrice, self.tick_size)
 
         # Order amount
         if self.quantity > 0:
@@ -364,12 +281,11 @@ class Trading():
                 self.amount = float(Orders.get_balance("BTC"))
 
             quantity = self.amount / buyPrice
-            if self.satoshi_count <= 6:
-                quantity = round(quantity, 3)
-            elif self.satoshi_count <= 7:
-                quantity = round(quantity, 2)
-            else:
-                quantity = int(round(quantity))
+
+        if self.step_size == 1:
+            quantity = int(round(quantity))
+        else:
+            quantity = round(quantity, self.step_size)
 
         # Check working mode
         if self.option.mode == 'range':
@@ -382,38 +298,6 @@ class Trading():
         if self.option.prints and self.order_id == 0:
             print ('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk))
 
-        if self.order_id > 0:
-
-            # Profit mode
-            if self.order_data is not None:
-
-                order = self.order_data;
-
-                # Last control
-                newProfitableSellingPrice = self.calc(float(order['price']))
-                         
-                if (lastAsk >= newProfitableSellingPrice):
-                    profitableSellingPrice = newProfitableSellingPrice
-
-            # range mode
-            if self.option.mode == 'range':
-                profitableSellingPrice = self.option.sellprice
-
-            '''
-            If the order is complete,
-            try to sell it.
-            '''
-
-            # Sell price with proper sat count
-            profitableSellingPrice = round((profitableSellingPrice - (profitableSellingPrice * self.option.decreasing / 100)), self.satoshi_count)
-
-            # Perform buy action
-            sellAction = threading.Thread(target=self.sell, args=(symbol, quantity, self.order_id, profitableSellingPrice, lastPrice,))
-            sellAction.start()
-
-            self.is_thread_open = False
-            return
-
         '''
         Did profit get caught
         if ask price is greater than profit price,
@@ -424,16 +308,38 @@ class Trading():
            (lastPrice <= float(self.option.buyprice) and self.option.mode == 'range'):
 
             if self.order_id == 0:
-                self.buy(symbol, quantity, buyPrice)
 
-                # Perform check/sell action
-                # checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
-                # checkAction.start()
+                while (self.bot_status != "buy"):
 
-        self.is_thread_open = False
+                    if self.bot_status == "cancel":
+                        self.bot_status = "scan"
+                        return
 
-    def logic(self):
-        return 0
+                    self.buy(symbol, quantity, buyPrice)
+
+        if self.order_id > 0:
+
+            # range mode
+            if self.option.mode == 'range':
+                profitableSellingPrice = self.option.sellprice
+
+            # Sell price with proper sat count
+            profitableSellingPrice = round((profitableSellingPrice - (profitableSellingPrice * self.option.decreasing / 100)), self.tick_size)
+
+            '''
+            If the order is complete,
+            try to sell it.
+            '''
+
+            while (self.bot_status != "sell"):
+
+                if self.bot_status == "cancel":
+                    self.bot_status = "scan"
+                    return
+
+                self.sell(symbol, quantity, self.order_id, profitableSellingPrice, lastPrice)
+
+        self.bot_status = "scan"
 
     def filters(self):
 
@@ -450,18 +356,29 @@ class Trading():
 
         return symbol_info
 
+    def get_satoshi_count(self, num):
+        return int(str(Tools.e2f(num))[::-1].find('.'))
+
     def validate(self):
 
         valid = True
         symbol = self.option.symbol
-        filters = self.filters()['filters']
 
-        lastPrice = Orders.get_ticker(symbol)
+        filters = self.filters()['filters']
 
         minQty = float(filters['LOT_SIZE']['minQty'])
         minPrice = float(filters['PRICE_FILTER']['minPrice'])
         minNotional = float(filters['MIN_NOTIONAL']['minNotional'])
         quantity = float(self.option.quantity)
+
+        lastPrice = float(Orders.get_ticker(symbol)['lastPrice'])
+
+        # stepSize defines the intervals that a quantity/icebergQty can be increased/decreased by.
+        self.step_size = self.get_satoshi_count(float(filters['LOT_SIZE']['stepSize']))
+
+        # tickSize defines the intervals that a price/stopPrice can be increased/decreased by.
+        # -1 because it doesn't return decimal point, pure exponential form
+        self.tick_size = self.get_satoshi_count(float(filters['PRICE_FILTER']['tickSize'])) - 1
 
         if self.quantity > 0:
             quantity = float(self.quantity)
@@ -471,32 +388,12 @@ class Trading():
 
             lastBid, lastAsk = Orders.get_order_book(symbol)
             quantity = self.amount / lastBid
-            satsQuantity = self.set_satoshi_count(lastBid, lastAsk, lastPrice)
 
-            if satsQuantity <= 6:
-                quantity = round(quantity, 3)
-            elif satsQuantity <= 7:
-                quantity = round(quantity, 2)
-            else:
-                quantity = int(round(quantity))
+        if self.step_size == 1:
+            quantity = int(round(quantity))
+        else:
+            quantity = round(quantity, self.step_size)
 
-        # stepSize defines the intervals that a quantity/icebergQty can be increased/decreased by.
-        stepSize = float(filters['LOT_SIZE']['stepSize'])
-
-        # tickSize defines the intervals that a price/stopPrice can be increased/decreased by
-        tickSize = float(filters['PRICE_FILTER']['tickSize'])
-
-        # Format quantity
-        self.step_size = stepSize
-
-        # If option increasing default tickSize greater than
-        if (float(self.option.increasing) < tickSize):
-            self.increasing = tickSize
-        
-        # If option decreasing default tickSize greater than
-        if (float(self.option.decreasing) < tickSize):
-            self.decreasing = tickSize
-        
         # Just for validation
         price = lastPrice
         notional = lastPrice * quantity
@@ -546,19 +443,16 @@ class Trading():
 
         while (cycle <= self.option.loop):
 
-            if not self.is_thread_open:
-                startTime = time.time()
+            startTime = time.time()
 
-                actionTrader = threading.Thread(target=self.action, args=(symbol,))
-                actions.append(actionTrader)
-                actionTrader.start()
+            self.action(symbol)
 
-                endTime = time.time()
+            endTime = time.time()
 
-                if endTime - startTime < self.wait_time:
+            if endTime - startTime < self.wait_time:
 
-                   time.sleep(self.wait_time - (endTime - startTime))
+               time.sleep(self.wait_time - (endTime - startTime))
 
-                   # 0 = Unlimited loop
-                   if self.option.loop > 0:
-                       cycle = cycle + 1
+               # 0 = Unlimited loop
+               if self.option.loop > 0:
+                   cycle = cycle + 1

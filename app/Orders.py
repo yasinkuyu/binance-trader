@@ -89,15 +89,13 @@ class Orders():
             order = client.query_order(symbol, orderId)
 
             if 'msg' in order:
-                return False
                 Messages.get(order['msg']) # TODO
 
             return order
 
         except Exception as e:
             print ('go: %s' % (e))
-            return False
-    
+
     @staticmethod
     def get_order_status(symbol, orderId):
         try:
@@ -119,7 +117,7 @@ class Orders():
     
             ticker = client.get_ticker(symbol)
  
-            return float(ticker['lastPrice'])
+            return ticker
         except Exception as e:
             print ('gt: %s' % (e))
     
