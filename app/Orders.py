@@ -90,11 +90,13 @@ class Orders():
 
             if 'msg' in order:
                 Messages.get(order['msg']) # TODO
+                return False
 
             return order
 
         except Exception as e:
             print ('go: %s' % (e))
+            return False
 
     @staticmethod
     def get_order_status(symbol, orderId):

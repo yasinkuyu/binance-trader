@@ -89,29 +89,50 @@ class Trading():
         If not successful, the order will be canceled.
         '''
 
-        try:
+        buy_order = Orders.get_order(symbol, orderId)
 
-            buy_order = Orders.get_order(symbol, orderId)
-
-        except Exception as e:
-            print ("SERVER DELAY!")
+        if not buy_order:
+            print ("SERVER DELAY! Rechecking...")
             return
 
         if buy_order['status'] == 'FILLED' and buy_order['side'] == "BUY":
+
             print ("Buy order filled... Try sell...")
+
         else:
+
             time.sleep(self.WAIT_TIME_CHECK_BUY)
+            buy_order = Orders.get_order(symbol, orderId)
+
             if buy_order['status'] == 'FILLED' and buy_order['side'] == "BUY":
-                print ("Buy order filled after 0.2 second... Try sell...")
+
+                print ("Buy order filled after 0.5 second... Try sell...")
+
             elif buy_order['status'] == 'PARTIALLY_FILLED' and buy_order['side'] == "BUY":
+
                 print ("Buy order partially filled... Try sell... Cancel remaining buy...")
                 self.cancel(symbol, orderId)
+                quantity = Orders.get_order(symbol, orderId)['executedQty']
+
+                if self.step_size == 1:
+                    quantity = int(round(quantity))
+                else:
+                    quantity = round(quantity, self.step_size)
+
             else:
+
                 self.cancel(symbol, orderId)
                 print ("Buy order fail (Not filled) Cancel order...")
-                self.order_id = 0
-                self.bot_status = "cancel"
-                return
+
+                time.sleep(self.WAIT_TIME_BUY_SELL)
+                buy_order = Orders.get_order(symbol, orderId)
+
+                if buy_order['status'] == 'FILLED':
+                    print ("Binance server delayed! Try sell...")
+                else:
+                    self.bot_status = "cancel"
+                    return
+
 
         sell_id = Orders.sell_limit(symbol, quantity, sell_price)['orderId']
 
