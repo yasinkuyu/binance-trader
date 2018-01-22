@@ -35,6 +35,7 @@ class Trading():
     WAIT_TIME_BUY_SELL = 1 # seconds
     WAIT_TIME_CHECK_BUY = 0.5 # seconds
     WAIT_TIME_CHECK_SELL = 5 # seconds
+    WAIT_TIME_CHECK_HOLD = 10 # seconds
     WAIT_TIME_STOP_LOSS = 20 # seconds
 
     def __init__(self, option):
@@ -174,7 +175,7 @@ class Trading():
             sell_status = 'NEW'
 
             while (sell_status != "FILLED"):
-                time.sleep(self.WAIT_TIME_CHECK_SELL)
+                time.sleep(self.WAIT_TIME_CHECK_HOLD)
                 sell_status = Orders.get_order(symbol, sell_id)['status']
                 lastPrice = float(Orders.get_ticker(symbol)['lastPrice'])
                 print ('Status: %s Current price: %s Sell price: %s' % (sell_status, lastPrice, sell_price))
