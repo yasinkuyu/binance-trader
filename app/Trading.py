@@ -27,6 +27,7 @@ class Trading():
     # float(step_size * math.floor(float(free)/step_size))
     step_size = 0
     tick_size = 0
+    min_notional = 0
 
     # Check bot status
     bot_status = "scan"
@@ -52,10 +53,9 @@ class Trading():
 
         #BTC amount
         self.amount = self.option.amount
-
         self.increasing = self.option.increasing
         self.decreasing = self.option.decreasing
-    
+
     def buy(self, symbol, quantity, buyPrice):
 
         # Do you have an open order?
@@ -97,31 +97,39 @@ class Trading():
             return
 
         if buy_order['status'] == 'FILLED' and buy_order['side'] == "BUY":
-
             print ("Buy order filled... Try sell...")
 
         else:
-
             time.sleep(self.WAIT_TIME_CHECK_BUY)
             buy_order = Orders.get_order(symbol, orderId)
 
             if buy_order['status'] == 'FILLED' and buy_order['side'] == "BUY":
-
                 print ("Buy order filled after 0.5 second... Try sell...")
 
             elif buy_order['status'] == 'PARTIALLY_FILLED' and buy_order['side'] == "BUY":
+                print ("Buy order partially filled... Wait 1 more second...")
+                time.sleep(self.WAIT_TIME_BUY_SELL)
+                partial_status = "hold"
 
-                print ("Buy order partially filled... Try sell... Cancel remaining buy...")
-                self.cancel(symbol, orderId)
-                quantity = float(Orders.get_order(symbol, orderId)['executedQty'])
+                while (partial_status == "hold"):
+                    buy_order = Orders.get_order(symbol, orderId)
 
-                if self.step_size == 1:
-                    quantity = int(round(quantity))
-                else:
-                    quantity = round(quantity, self.step_size)
+                    if buy_order['status'] == 'PARTIALLY_FILLED':
+                        print ("Buy order still partially filled... Try sell...")
+                        quantity = self.format_quantity(float(buy_order['executedQty']))
+
+                        if self.min_notional > quantity * sell_price:
+                            print ("Can't sell below minimum allowable price. Hold for 10 seconds...")
+                            time.sleep(self.WAIT_TIME_CHECK_HOLD)
+                        else:
+                            self.cancel(symbol, orderId)
+                            partial_status = "sell"
+
+                    else:
+                        partial_status = "sell"
+                        quantity = self.format_quantity(float(buy_order['executedQty']))
 
             else:
-
                 self.cancel(symbol, orderId)
                 print ("Buy order fail (Not filled) Cancel order...")
 
@@ -190,12 +198,7 @@ class Trading():
 
         if float(stop_order['executedQty']) > 0:
 
-            quantity = float(stop_order['executedQty'])
-
-            if self.step_size == 1:
-                quantity = int(round(quantity))
-            else:
-                quantity = round(quantity, self.step_size)
+            quantity = self.format_quantity(float(stop_order['executedQty']))
 
         lossprice = sell_price - (sell_price * self.stop_loss / 100)
 
@@ -309,12 +312,7 @@ class Trading():
             if self.max_amount:
                 self.amount = float(Orders.get_balance("BTC"))
 
-            quantity = self.amount / buyPrice
-
-        if self.step_size == 1:
-            quantity = int(round(quantity))
-        else:
-            quantity = round(quantity, self.step_size)
+            quantity = self.format_quantity(self.amount / buyPrice)
 
         # Check working mode
         if self.option.mode == 'range':
@@ -388,6 +386,16 @@ class Trading():
     def get_satoshi_count(self, num):
         return int(str(Tools.e2f(num))[::-1].find('.'))
 
+    # Adjust quantity with proper step_size
+    def format_quantity(self, quantity):
+
+        if self.step_size == 1:
+            quantity = int(round(quantity))
+        else:
+            quantity = round(quantity, self.step_size)
+
+        return quantity
+
     def validate(self):
 
         valid = True
@@ -401,6 +409,9 @@ class Trading():
         quantity = float(self.option.quantity)
 
         lastPrice = float(Orders.get_ticker(symbol)['lastPrice'])
+
+        # minNotional defines minimum amount a coin can be bought
+        self.min_notional = minNotional
 
         # stepSize defines the intervals that a quantity/icebergQty can be increased/decreased by.
         self.step_size = self.get_satoshi_count(float(filters['LOT_SIZE']['stepSize']))
@@ -416,12 +427,7 @@ class Trading():
                 self.amount = float(Orders.get_balance("BTC"))
 
             lastBid, lastAsk = Orders.get_order_book(symbol)
-            quantity = self.amount / lastBid
-
-        if self.step_size == 1:
-            quantity = int(round(quantity))
-        else:
-            quantity = round(quantity, self.step_size)
+            quantity = self.format_quantity(self.amount / lastBid)
 
         # Just for validation
         price = lastPrice
