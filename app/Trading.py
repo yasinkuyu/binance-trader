@@ -35,6 +35,7 @@ class Trading():
     WAIT_TIME_BUY_SELL = 1 # seconds
     WAIT_TIME_CHECK_BUY = 0.5 # seconds
     WAIT_TIME_CHECK_SELL = 5 # seconds
+    WAIT_TIME_CHECK_HOLD = 10 # seconds
     WAIT_TIME_STOP_LOSS = 20 # seconds
 
     def __init__(self, option):
@@ -112,7 +113,7 @@ class Trading():
 
                 print ("Buy order partially filled... Try sell... Cancel remaining buy...")
                 self.cancel(symbol, orderId)
-                quantity = Orders.get_order(symbol, orderId)['executedQty']
+                quantity = float(Orders.get_order(symbol, orderId)['executedQty'])
 
                 if self.step_size == 1:
                     quantity = int(round(quantity))
@@ -163,18 +164,17 @@ class Trading():
 
             if self.stop(symbol, quantity, sell_id, sell_price):
 
-                if Orders.get_order(symbol, sell_id)['status'] != 'FILLED':
-                    print ('We apologize... Sold at loss...')
+                print ('We apologize... Sold at loss...')
 
             else:
+
                 print ('We apologize... Cant sell even at loss... Please sell manually... Stopping program...')
-                self.cancel(symbol, sell_id)
-                quit()
+
         else:
             sell_status = 'NEW'
 
             while (sell_status != "FILLED"):
-                time.sleep(self.WAIT_TIME_CHECK_SELL)
+                time.sleep(self.WAIT_TIME_CHECK_HOLD)
                 sell_status = Orders.get_order(symbol, sell_id)['status']
                 lastPrice = float(Orders.get_ticker(symbol)['lastPrice'])
                 print ('Status: %s Current price: %s Sell price: %s' % (sell_status, lastPrice, sell_price))
@@ -188,6 +188,15 @@ class Trading():
         # If the target is not reached, stop-loss.
         stop_order = Orders.get_order(symbol, orderId)
 
+        if float(stop_order['executedQty']) > 0:
+
+            quantity = float(stop_order['executedQty'])
+
+            if self.step_size == 1:
+                quantity = int(round(quantity))
+            else:
+                quantity = round(quantity, self.step_size)
+
         lossprice = sell_price - (sell_price * self.stop_loss / 100)
 
         status = stop_order['status']
@@ -200,7 +209,7 @@ class Trading():
                 # Stop loss
                 lastBid, lastAsk = Orders.get_order_book(symbol)
 
-                if lastAsk >= lossprice:
+                if lastAsk <= lossprice:
 
                     sello = Orders.sell_market(symbol, quantity)
 
@@ -213,23 +222,22 @@ class Trading():
                     else:
                         # Wait a while after the sale to the loss.
                         time.sleep(self.WAIT_TIME_STOP_LOSS)
-                        statusloss = sello['status']
+                        statusloss = Orders.get_order(symbol, sell_id)['status']
                         if statusloss != 'NEW':
                             print ('Stop-loss, sold')
                             return True
                         else:
-                            self.cancel(symbol, sell_id)
                             return False
                 else:
                     sello = Orders.sell_limit(symbol, quantity, lossprice)
+                    sell_id = sello['orderId']
                     print ('Stop-loss, sell limit, %s' % (lossprice))
                     time.sleep(self.WAIT_TIME_STOP_LOSS)
-                    statusloss = sello['status']
+                    statusloss = Orders.get_order(symbol, sell_id)['status']
                     if statusloss != 'NEW':
                         print ('Stop-loss, sold')
                         return True
                     else:
-                        self.cancel(symbol, sell_id)
                         return False
             else:
                 print ('Cancel did not work... Might have been sold before stop loss...')
