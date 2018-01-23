@@ -6,7 +6,6 @@ import os
 import sys
 import time
 import config
-import threading
 
 # Define Custom imports
 from Database import Database
@@ -108,26 +107,7 @@ class Trading():
 
             elif buy_order['status'] == 'PARTIALLY_FILLED' and buy_order['side'] == "BUY":
                 print ("Buy order partially filled... Wait 1 more second...")
-                time.sleep(self.WAIT_TIME_BUY_SELL)
-                partial_status = "hold"
-
-                while (partial_status == "hold"):
-                    buy_order = Orders.get_order(symbol, orderId)
-
-                    if buy_order['status'] == 'PARTIALLY_FILLED':
-                        print ("Buy order still partially filled... Try sell...")
-                        quantity = self.format_quantity(float(buy_order['executedQty']))
-
-                        if self.min_notional > quantity * sell_price:
-                            print ("Can't sell below minimum allowable price. Hold for 10 seconds...")
-                            time.sleep(self.WAIT_TIME_CHECK_HOLD)
-                        else:
-                            self.cancel(symbol, orderId)
-                            partial_status = "sell"
-
-                    else:
-                        partial_status = "sell"
-                        quantity = self.format_quantity(float(buy_order['executedQty']))
+                quantity = self.check_partial_order(symbol, orderId, sell_price)
 
             else:
                 self.cancel(symbol, orderId)
@@ -138,6 +118,12 @@ class Trading():
 
                 if buy_order['status'] == 'FILLED':
                     print ("Binance server delayed! Try sell...")
+
+                elif buy_order['status'] == 'PARTIALLY_FILLED':
+                    print ("Binance server delayed! Try sell...")
+                    print ("Buy order partially filled... Wait 1 more second...")
+                    quantity = self.check_partial_order(symbol, orderId, sell_price)
+
                 else:
                     self.bot_status = "cancel"
                     return
@@ -168,15 +154,9 @@ class Trading():
         if self.stop_loss > 0:
 
             # If sell order failed after 5 seconds, 5 seconds more wait time before selling at loss
+            print ('Not sold after 5 seconds, wait 5 more seconds...')
             time.sleep(self.WAIT_TIME_CHECK_SELL)
-
-            if self.stop(symbol, quantity, sell_id, sell_price):
-
-                print ('We apologize... Sold at loss...')
-
-            else:
-
-                print ('We apologize... Cant sell even at loss... Please sell manually... Stopping program...')
+            self.stop(symbol, quantity, sell_id, sell_price)
 
         else:
             sell_status = 'NEW'
@@ -205,7 +185,7 @@ class Trading():
         status = stop_order['status']
 
         # Order status
-        if status == 'NEW' or status == 'PARTIALLY_FILLED':
+        if status == 'NEW':
 
             if self.cancel(symbol, orderId):
 
@@ -246,9 +226,15 @@ class Trading():
                 print ('Cancel did not work... Might have been sold before stop loss...')
                 return True
 
+        elif status == 'PARTIALLY_FILLED':
+            self.order_id = 0
+            print ('Sell partially filled, hold sell position to prevent dust coin. Continue trading...')
+            time.sleep(self.WAIT_TIME_CHECK_SELL)
+            return True
+
         elif status == 'FILLED':
             self.order_id = 0
-            print('Order filled')
+            print('Order filled before sell at loss!')
             return True
         else:
             return False
@@ -279,6 +265,31 @@ class Trading():
         # If there is an open order, exit.
         if self.order_id > 0:
             exit(1)
+
+    def check_partial_order(self, symbol, orderId, price):
+        time.sleep(self.WAIT_TIME_BUY_SELL)
+        partial_status = "hold"
+        quantity = 0
+
+        while (partial_status == "hold"):
+            order = Orders.get_order(symbol, orderId)
+
+            if order['status'] == 'PARTIALLY_FILLED':
+                print ("Order still partially filled...")
+                quantity = self.format_quantity(float(order['executedQty']))
+
+                if self.min_notional > quantity * sell_price:
+                    print ("Can't sell below minimum allowable price. Hold for 10 seconds...")
+                    time.sleep(self.WAIT_TIME_CHECK_HOLD)
+                else:
+                    self.cancel(symbol, orderId)
+                    partial_status = "sell"
+
+            else:
+                partial_status = "sell"
+                quantity = self.format_quantity(float(order['executedQty']))
+
+        return quantity
 
     def action(self, symbol):
 
