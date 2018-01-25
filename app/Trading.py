@@ -266,7 +266,7 @@ class Trading():
         if self.order_id > 0:
             exit(1)
 
-    def check_partial_order(self, symbol, orderId, price):
+    def check_partial_order(self, symbol, orderId, sell_price):
         time.sleep(self.WAIT_TIME_BUY_SELL)
         partial_status = "hold"
         quantity = 0
