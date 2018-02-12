@@ -1,6 +1,7 @@
 import time
 import hashlib
 import requests
+import hmac
 
 try:
     from urllib import urlencode
@@ -58,6 +59,11 @@ class BinanceAPI:
         path = "%s/openOrders" % self.BASE_URL
         params = {"symbol": market}
         return self._get(path, params)
+    
+    def get_myTrades(self, market, limit = 50):
+        path = "%s/myTrades" % self.BASE_URL_V3
+        params = {"symbol": market, "limit": limit}
+        return self._get(path, params)
 
     def buy_limit(self, market, quantity, rate):
         path = "%s/order" % self.BASE_URL
@@ -100,8 +106,10 @@ class BinanceAPI:
         ts = str(int(1000 * time.time()))
         data.update({"timestamp": ts})
 
-        h = self.secret + "|" + urlencode(data)
-        signature = hashlib.sha256(h.encode('utf-8')).hexdigest()
+        h = urlencode(data)
+        b = bytearray()
+        b.extend(self.secret.encode())
+        signature = hmac.new(b, msg=h.encode('utf-8'), digestmod=hashlib.sha256).hexdigest()
         data.update({"signature": signature})
         return data
 
