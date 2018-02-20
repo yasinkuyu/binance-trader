@@ -6,27 +6,26 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
 
 ## Configuration
 
-1. Signup Binance ( Referral url: https://www.binance.com/?ref=10701111 )
-2. Enable Two-factor Authentication    
-3. Go API Center, https://www.binance.com/userCenter/createApi.html
-4. Create New Key
+1. [Signup](https://www.binance.com/?ref=10701111) for Binance
+1. Enable Two-factor Authentication
+1. Go API Center, [Create New](https://www.binance.com/userCenter/createApi.html) Api Key
 
-        [✓] Read Info [✓] Enable Trading [X] Enable Withdrawals 
-5. Rename config.sample.py to config.py / orders.sample.db to orders.db
-6. Get an API and Secret Key, insert into config.py
+        [✓] Read Info [✓] Enable Trading [X] Enable Withdrawals
+
+1. Rename **config.sample.py** to `config.py` / **orders.sample.db** to `orders.db`
+1. Get an API and Secret Key, insert into `config.py`
 
         API key for account access
         api_key = ''
         Secret key for account access
         api_secret = ''
 
-        API Docs: https://www.binance.com/restapipub.html
-7. Optional: run as an excutable application in Docker containers
+        [API Docs](https://www.binance.com/restapipub.html) 
+        
+1. Optional: run as an excutable application in Docker containers
 
 ## Requirements
 
-    sudo easy_install -U requests
-    or 
     sudo pip install requests
     
     Python 2.7
@@ -118,7 +117,7 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
         @omerfarukz
         @plgonzalezrx8
     
-## Failure
+## Troubleshooting
 
     Filter failure: MIN_NOTIONAL
     https://support.binance.com/hc/en-us/articles/115000594711-Trading-Rule
@@ -147,9 +146,6 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
      
 ## License
 
-    Code released under the MIT License.
-
-#### Tip Box
-[Wallets](http://yasinkuyu.net/wallet) 
+Code released under the [MIT License](https://opensource.org/licenses/MIT).
 
 ---
