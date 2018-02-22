@@ -4,6 +4,7 @@
 # TODO 
 class analyze():
     
+    @staticmethod
     def position():
         return 1
     
@@ -11,7 +12,7 @@ class analyze():
     def direction(ticker):
         
         # Todo: Analyze, best price position
-        hight = float(ticker['hight'])
-        low = float(ticker['low'])
+        # hight = float(ticker['hight'])
+        # low = float(ticker['low'])
 
         return False

@@ -20,7 +20,7 @@ class Binance:
 
         for balance in balances['balances']:
             if float(balance['locked']) > 0 or float(balance['free']) > 0:
-                print ('%s: %s' % (balance['asset'], balance['free']))
+                print('%s: %s' % (balance['asset'], balance['free']))
 
     def balance(self, asset="BTC"):
         balances = self.client.get_account()
@@ -50,50 +50,50 @@ class Binance:
             
             if coin['quoteAsset'] == asset:
                     
-                orders = self.client.get_orderbooks(coin['symbol'], 5)
+                orders = self.client.get_order_books(coin['symbol'], 5)
                 lastBid = float(orders['bids'][0][0]) #last buy price (bid)
                 lastAsk = float(orders['asks'][0][0]) #last sell price (ask)
     
                 profit = (lastAsk - lastBid) /  lastBid * 100
             
-                print ('%.2f%% profit : %s (bid:%.8f-ask%.8f)' % (profit, coin['symbol'], lastBid, lastAsk))
+                print('%.2f%% profit : %s (bid:%.8f-ask%.8f)' % (profit, coin['symbol'], lastBid, lastAsk))
             
 try:
 
     m = Binance()
 
-    print ('1 -) Print orders')
-    print ('2 -) Scan profits')
-    print ('3 -) List balances')
-    print ('4 -) Check balance')
-    print ('Enter option number: Ex: 2')
+    print('1 -) Print orders')
+    print('2 -) Scan profits')
+    print('3 -) List balances')
+    print('4 -) Check balance')
+    print('Enter option number: Ex: 2')
 
     option = raw_input()
     
     if option is '1':
         
-        print ('Enter symbol: Ex: XVGBTC')
+        print('Enter symbol: Ex: XVGBTC')
         
         symbol = raw_input()
         
         # Orders
-        print ('%s Orders' % (symbol))
+        print('%s Orders' % (symbol))
         m.orders(symbol, 10)
     
     elif option is '3':
         m.balances()
     elif option is '4':
         
-        print ('Enter asset: Ex: BTC')
+        print('Enter asset: Ex: BTC')
         
         symbol = raw_input()
         
-        print ('%s balance' % (symbol))
+        print('%s balance' % (symbol))
         
         m.balance(symbol)
     else:
         
-        print ('Enter Asset (Ex: BTC, ETC, BNB, USDT)')
+        print('Enter Asset (Ex: BTC, ETC, BNB, USDT)')
         
         asset = raw_input()
         
@@ -101,5 +101,5 @@ try:
         m.profits(asset)
 
 except 'BinanceAPIException' as e:
-    print (e.status_code)
-    print (e.message)
+    print(e.status_code)
+    print(e.message)

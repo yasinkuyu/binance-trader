@@ -39,7 +39,7 @@ class BinanceAPI:
         params = {"symbol": market}
         return self._get_no_sign(path, params)
 
-    def get_orderbooks(self, market, limit=50):
+    def get_order_books(self, market, limit=50):
         path = "%s/depth" % self.BASE_URL
         params = {"symbol": market, "limit": limit}
         return self._get_no_sign(path, params)
@@ -51,7 +51,7 @@ class BinanceAPI:
     def get_products(self):
         return requests.get(self.PUBLIC_URL, timeout=30, verify=True).json()
         
-    def get_exchance_info(self):
+    def get_exchange_info(self):
         path = "%s/exchangeInfo" % self.BASE_URL
         return requests.get(path, timeout=30, verify=True).json()
 
@@ -60,7 +60,7 @@ class BinanceAPI:
         params = {"symbol": market}
         return self._get(path, params)
     
-    def get_myTrades(self, market, limit = 50):
+    def get_my_trades(self, market, limit = 50):
         path = "%s/myTrades" % self.BASE_URL_V3
         params = {"symbol": market, "limit": limit}
         return self._get(path, params)
