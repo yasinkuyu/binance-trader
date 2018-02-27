@@ -1,6 +1,7 @@
 FROM python:3
-ADD app/config.py /
-ADD app/BinanceAPI.py /
-ADD trader.py /
+ADD app/ /app
+ADD db/ /db
+aDD trader.py /app
+ADD balance.py /app
 RUN pip install requests
-CMD [ "python", "./trader.py" ]
+CMD [ "python", "/app/trader.py" ]
