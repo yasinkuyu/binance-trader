@@ -65,7 +65,7 @@ class Trading():
     def buy(self, symbol, quantity, buyPrice):
         
         # Do you have an open order?
-        self.checkorder()
+        self.check_order()
             
         try: 
 
@@ -75,14 +75,14 @@ class Trading():
             # Database log
             Database.write([orderId, symbol, 0, buyPrice, 'BUY', quantity, self.option.profit])
                             
-            print ('Buy order created id:%d, q:%.8f, p:%.8f' % (orderId, quantity, float(buyPrice)))
+            print('Buy order created id:%d, q:%.8f, p:%.8f' % (orderId, quantity, float(buyPrice)))
         
             self.order_id = orderId
             
             return orderId
 
         except Exception as e:
-            print ('bl: %s' % (e))
+            print('bl: %s' % (e))
             time.sleep(self.WAIT_TIME_BUY_SELL)
             return None
 
@@ -95,33 +95,33 @@ class Trading():
  
         buy_order = Orders.get_order(symbol, orderId)
         
-        if buy_order['status'] == 'FILLED' and buy_order['side'] == "BUY":
-            print ("Buy order filled... Try sell...")
+        if buy_order['status'] == 'FILLED' and buy_order['side'] == 'BUY':
+            print('Buy order filled... Try sell...')
         else:
             time.sleep(self.WAIT_TIME_CHECK_BUY_SELL)
-            if buy_order['status'] == 'FILLED' and buy_order['side'] == "BUY":
-                print ("Buy order filled after 0.1 second... Try sell...")
-            elif buy_order['status'] == 'PARTIALLY_FILLED' and buy_order['side'] == "BUY":
-                print ("Buy order partially filled... Try sell... Cancel remaining buy...")
+            if buy_order['status'] == 'FILLED' and buy_order['side'] == 'BUY':
+                print('Buy order filled after 0.1 second... Try sell...')
+            elif buy_order['status'] == 'PARTIALLY_FILLED' and buy_order['side'] == 'BUY':
+                print('Buy order partially filled... Try sell... Cancel remaining buy...')
                 self.cancel(symbol, orderId)
             else:
                 self.cancel(symbol, orderId)
-                print ("Buy order fail (Not filled) Cancel order...")
+                print('Buy order fail (Not filled) Cancel order...')
                 self.order_id = 0
                 return
 
         sell_order = Orders.sell_limit(symbol, quantity, sell_price)  
 
         sell_id = sell_order['orderId']
-        print ('Sell order create id: %d' % sell_id)
+        print('Sell order create id: %d' % sell_id)
 
         time.sleep(self.WAIT_TIME_CHECK_SELL)
 
         if sell_order['status'] == 'FILLED':
 
-            print ('Sell order (Filled) Id: %d' % sell_id)
-            print ('LastPrice : %.8f' % last_price)
-            print ('Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(sell_order['price']), sell_price))
+            print('Sell order (Filled) Id: %d' % sell_id)
+            print('LastPrice : %.8f' % last_price)
+            print('Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(sell_order['price']), sell_price))
             
             self.order_id = 0
             self.order_data = None
@@ -141,19 +141,19 @@ class Trading():
             if self.stop(symbol, quantity, sell_id, last_price):
                 
                 if Orders.get_order(symbol, sell_id)['status'] != 'FILLED':
-                    print ('We apologize... Sold at loss...')
+                    print('We apologize... Sold at loss...')
                     
             else:
-                print ('We apologize... Cant sell even at loss... Please sell manually... Stopping program...')
+                print('We apologize... Cant sell even at loss... Please sell manually... Stopping program...')
                 self.cancel(symbol, sell_id)
                 exit(1)
             
-            while (sell_status != "FILLED"):
+            while (sell_status != 'FILLED'):
                 time.sleep(self.WAIT_TIME_CHECK_SELL)
                 sell_status = Orders.get_order(symbol, sell_id)['status']
                 lastPrice = Orders.get_ticker(symbol)
-                print ('Status: %s Current price: %.8f Sell price: %.8f' % (sell_status, lastPrice, sell_price))
-                print ('Sold! Continue trading...')
+                print('Status: %s Current price: %.8f Sell price: %.8f' % (sell_status, lastPrice, sell_price))
+                print('Sold! Continue trading...')
             
             self.order_id = 0
             self.order_data = None
@@ -178,7 +178,7 @@ class Trading():
             
                     sello = Orders.sell_market(symbol, quantity)  
    
-                    print ('Stop-loss, sell market, %s' % (last_price))
+                    print('Stop-loss, sell market, %s' % (last_price))
         
                     sell_id = sello['orderId']
                 
@@ -189,24 +189,24 @@ class Trading():
                         time.sleep(self.WAIT_TIME_STOP_LOSS)
                         statusloss = sello['status']
                         if statusloss != 'NEW':
-                            print ('Stop-loss, sold')
+                            print('Stop-loss, sold')
                             return True
                         else:
                             self.cancel(symbol, sell_id)
                             return False
                 else:
                     sello = Orders.sell_limit(symbol, quantity, lossprice)
-                    print ('Stop-loss, sell limit, %s' % (lossprice))
+                    print('Stop-loss, sell limit, %s' % (lossprice))
                     time.sleep(self.WAIT_TIME_STOP_LOSS)
                     statusloss = sello['status']
                     if statusloss != 'NEW':
-                        print ('Stop-loss, sold')
+                        print('Stop-loss, sold')
                         return True
                     else:
                         self.cancel(symbol, sell_id)
                         return False
             else:
-                print ('Cancel did not work... Might have been sold before stop loss...')
+                print('Cancel did not work... Might have been sold before stop loss...')
                 return True
             
         elif status == 'FILLED':
@@ -221,7 +221,7 @@ class Trading():
         # If profit is available and there is no purchase from the specified price, take it with the market.
         
         # Do you have an open order?
-        self.checkorder()
+        self.check_order()
         
         trading_size = 0
         time.sleep(self.WAIT_TIME_BUY_SELL)
@@ -240,7 +240,7 @@ class Trading():
         
             status = order['status']
 
-            print ('Wait buy order: %s id:%d, price: %.8f, orig_qty: %.8f' % (symbol, order['orderId'], price, orig_qty))
+            print('Wait buy order: %s id:%d, price: %.8f, orig_qty: %.8f' % (symbol, order['orderId'], price, orig_qty))
         
             if status == 'NEW':
             
@@ -248,7 +248,7 @@ class Trading():
             
                     buyo = Orders.buy_market(symbol, quantity)
                 
-                    print ('Buy market order')
+                    print('Buy market order')
                 
                     self.order_id = buyo['orderId']
                     self.order_data = buyo
@@ -264,10 +264,10 @@ class Trading():
             elif status == 'FILLED':
                 self.order_id = order['orderId']
                 self.order_data = order
-                print ("Filled")
+                print('Filled')
                 break
             elif status == 'PARTIALLY_FILLED':
-                print ("Partial filled")
+                print('Partial filled')
                 break
             else:
                 trading_size += 1
@@ -282,7 +282,7 @@ class Trading():
             self.order_data = None
             return True
             
-        if check_order['status'] == 'NEW' or check_order['status'] != "CANCELLED":
+        if check_order['status'] == 'NEW' or check_order['status'] != 'CANCELLED':
             Orders.cancel_order(symbol, orderId)
             self.order_id = 0
             self.order_data = None
@@ -294,10 +294,10 @@ class Trading():
             return lastBid + (lastBid * self.option.profit / 100)
 
         except Exception as e:
-            print ('c: %s' % (e))
+            print('c: %s' % (e))
             return 
             
-    def checkorder(self):
+    def check_order(self):
         # If there is an open order, exit.
         if self.order_id > 0:
             exit(1)
@@ -332,7 +332,7 @@ class Trading():
         # Screen log
         if self.option.prints and self.order_id == 0:
             spreadPerc = (lastAsk/lastBid - 1) * 100.0
-            print ('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f spread:%.2f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, spreadPerc))
+            print('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f spread:%.2f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, spreadPerc))
         
         # analyze = threading.Thread(target=analyze, args=(symbol,))
         # analyze.start()
@@ -387,11 +387,11 @@ class Trading():
         
         symbol = self.option.symbol
 
-        # Get symbol exchance info
+        # Get symbol exchange info
         symbol_info = Orders.get_info(symbol)
 
         if not symbol_info:
-            print ("Invalid symbol, please try again...")
+            print('Invalid symbol, please try again...')
             exit(1)
 
         symbol_info['filters'] = {item['filterType']: item for item in symbol_info['filters']}
@@ -457,16 +457,16 @@ class Trading():
         
         # minQty = minimum order quantity
         if quantity < minQty:
-            print ("Invalid quantity, minQty: %.8f (u: %.8f)" % (minQty, quantity))
+            print('Invalid quantity, minQty: %.8f (u: %.8f)' % (minQty, quantity))
             valid = False
         
         if lastPrice < minPrice:
-            print ("Invalid price, minPrice: %.8f (u: %.8f)" % (minPrice, lastPrice))
+            print('Invalid price, minPrice: %.8f (u: %.8f)' % (minPrice, lastPrice))
             valid = False
 
         # minNotional = minimum order value (price * quantity)
         if notional < minNotional:
-            print ("Invalid notional, minNotional: %.8f (u: %.8f)" % (minNotional, notional))
+            print('Invalid notional, minNotional: %.8f (u: %.8f)' % (minNotional, notional))
             valid = False
         
         if not valid:
@@ -478,32 +478,35 @@ class Trading():
         actions = []
 
         symbol = self.option.symbol
-
-        print ('@yasinkuyu, 2018')
-        print ('Auto Trading for Binance.com. --symbol: %s\n' % (symbol))
-
-        print ('... \n')
+        
+        print('Auto Trading for Binance.com. @yasinkuyu')
+        print('\n')
 
         # Validate symbol
         self.validate()
         
-        print ('Started... --quantity: %.8f\n' % (self.quantity))
+        print('Started...')
+        print('Trading Symbol: %s' % symbol)
+        print('Buy Quantity: %.8f' % self.quantity)
+        print('Stop-Loss Amount: %s' % self.stop_loss)
         
         if self.option.mode == 'range':
 
            if self.option.buyprice == 0 or self.option.sellprice == 0:
-               print ('Plese enter --buyprice / --sellprice\n')
+               print('Please enter --buyprice / --sellprice\n')
                exit(1)
 
-           print ('Wait buyprice:%.8f sellprice:%.8f' % (self.option.buyprice, self.option.sellprice))
+           print('Range Mode Options:')
+           print('\tBuy Price: %.8f', self.option.buyprice)
+           print('\tSell Price: %.8f', self.option.sellprice)
 
         else:
-           print ('%s%% profit scanning for %s \n' % (self.option.profit, symbol))
-           print ('Between Ask and Bid %s%% profit hunting' % (self.option.profit))
-           print ('buyp : BuyPrice  (Bid+ --increasing %.8f)' % (self.increasing))
-           print ('sellp: SellPrice (Bid- --decreasing %.8f)' % (self.decreasing))
+            print('Profit Mode Options:')
+            print('\tPreferred Profit: %0.2f%%' % self.option.profit)
+            print('\tBuy Price : (Bid+ --increasing %.8f)' % self.increasing)
+            print('\tSell Price: (Ask- --decreasing %.8f)' % self.decreasing)
 
-        print ('... \n')
+        print('\n')
            
         while (cycle <= self.option.loop):
 

@@ -12,7 +12,7 @@ except ImportError:
 class BinanceAPI:
     
     BASE_URL = "https://www.binance.com/api/v1"
-    BASE_URL_V3 = "https://api.binance.com/api/v3/"
+    BASE_URL_V3 = "https://api.binance.com/api/v3"
     PUBLIC_URL = "https://www.binance.com/exchange/public/product"
 
     def __init__(self, key, secret):
@@ -39,59 +39,59 @@ class BinanceAPI:
         params = {"symbol": market}
         return self._get_no_sign(path, params)
 
-    def get_orderbooks(self, market, limit=50):
+    def get_order_books(self, market, limit=50):
         path = "%s/depth" % self.BASE_URL
         params = {"symbol": market, "limit": limit}
         return self._get_no_sign(path, params)
 
     def get_account(self):
-        path = "%s/account" % self.BASE_URL
+        path = "%s/account" % self.BASE_URL_V3
         return self._get(path, {})
 
     def get_products(self):
         return requests.get(self.PUBLIC_URL, timeout=30, verify=True).json()
         
-    def get_exchance_info(self):
+    def get_exchange_info(self):
         path = "%s/exchangeInfo" % self.BASE_URL
         return requests.get(path, timeout=30, verify=True).json()
 
     def get_open_orders(self, market, limit = 100):
-        path = "%s/openOrders" % self.BASE_URL
+        path = "%s/openOrders" % self.BASE_URL_V3
         params = {"symbol": market}
         return self._get(path, params)
     
-    def get_myTrades(self, market, limit = 50):
+    def get_my_trades(self, market, limit = 50):
         path = "%s/myTrades" % self.BASE_URL_V3
         params = {"symbol": market, "limit": limit}
         return self._get(path, params)
 
     def buy_limit(self, market, quantity, rate):
-        path = "%s/order" % self.BASE_URL
+        path = "%s/order" % self.BASE_URL_V3
         params = self._order(market, quantity, "BUY", rate)
         return self._post(path, params)
 
     def sell_limit(self, market, quantity, rate):
-        path = "%s/order" % self.BASE_URL
+        path = "%s/order" % self.BASE_URL_V3
         params = self._order(market, quantity, "SELL", rate)
         return self._post(path, params)
 
     def buy_market(self, market, quantity):
-        path = "%s/order" % self.BASE_URL
+        path = "%s/order" % self.BASE_URL_V3
         params = self._order(market, quantity, "BUY")
         return self._post(path, params)
 
     def sell_market(self, market, quantity):
-        path = "%s/order" % self.BASE_URL
+        path = "%s/order" % self.BASE_URL_V3
         params = self._order(market, quantity, "SELL")
         return self._post(path, params)
 
     def query_order(self, market, orderId):
-        path = "%s/order" % self.BASE_URL
+        path = "%s/order" % self.BASE_URL_V3
         params = {"symbol": market, "orderId": orderId}
         return self._get(path, params)
 
     def cancel(self, market, order_id):
-        path = "%s/order" % self.BASE_URL
+        path = "%s/order" % self.BASE_URL_V3
         params = {"symbol": market, "orderId": order_id}
         return self._delete(path, params)
 

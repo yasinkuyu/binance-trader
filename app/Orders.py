@@ -60,26 +60,26 @@ class Orders():
             if 'msg' in order:
                 Messages.get(order['msg'])
             
-            print ('Profit loss, called order, %s' % (orderId))
+            print('Profit loss, called order, %s' % (orderId))
         
             return True
         
         except Exception as e:
-            print ('co: %s' % (e))
+            print('co: %s' % e)
             return False
 
     @staticmethod
     def get_order_book(symbol):
         try:
 
-            orders = client.get_orderbooks(symbol, 5)
+            orders = client.get_order_books(symbol, 5)
             lastBid = float(orders['bids'][0][0]) #last buy price (bid)
             lastAsk = float(orders['asks'][0][0]) #last sell price (ask)
      
             return lastBid, lastAsk
     
         except Exception as e:
-            print ('ob: %s' % (e))
+            print('ob: %s' % e)
             return 0, 0
 
     @staticmethod
@@ -95,7 +95,7 @@ class Orders():
             return order
 
         except Exception as e:
-            print ('go: %s' % (e))
+            print('go: %s' % e)
             return False
     
     @staticmethod
@@ -110,7 +110,7 @@ class Orders():
             return order['status']
  
         except Exception as e:
-            print ('gos: %s' % (e))
+            print('gos: %s' % e)
             return None
     
     @staticmethod
@@ -121,13 +121,13 @@ class Orders():
  
             return float(ticker['lastPrice'])
         except Exception as e:
-            print ('gt: %s' % (e))
+            print('gt: %s' % e)
     
     @staticmethod
     def get_info(symbol):
         try:        
     
-            info = client.get_exchance_info()
+            info = client.get_exchange_info()
             
             if symbol != "":
                 return [market for market in info['symbols'] if market['symbol'] == symbol][0]
@@ -135,4 +135,4 @@ class Orders():
             return info
             
         except Exception as e:
-            return
+            print('gi: %s' % e)
