@@ -21,6 +21,9 @@ class Trading():
     
     buy_filled = True
     sell_filled = True
+    # my edit for sell
+    sell_id= 0
+    sell_order= None
     
     buy_filled_qty = 0
     sell_filled_qty = 0
@@ -109,23 +112,24 @@ class Trading():
                 print('Buy order fail (Not filled) Cancel order...')
                 self.order_id = 0
                 return
-
-        sell_order = Orders.sell_limit(symbol, quantity, sell_price)  
-
-        sell_id = sell_order['orderId']
-        print('Sell order create id: %d' % sell_id)
+        if self.sell_id==0:
+            self.sell_id = Orders.sell_limit(symbol, quantity, sell_price)['orderId']
+            print ('Sell order create id: %d' % self.sell_id)
+            
 
         time.sleep(self.WAIT_TIME_CHECK_SELL)
+        self.sell_order=Orders.get_order(symbol, self.sell_id)
+        
+        if self.sell_order['status'] == 'FILLED':
 
-        if sell_order['status'] == 'FILLED':
-
-            print('Sell order (Filled) Id: %d' % sell_id)
+            print('Sell order (Filled) Id: %d' % self.sell_id)
             print('LastPrice : %.8f' % last_price)
-            print('Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(sell_order['price']), sell_price))
+            print('Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(self.sell_order['price']), sell_price))
             
             self.order_id = 0
             self.order_data = None
-            
+            self.sell_order= None
+            self.sell_id==0
             return
 
         '''
@@ -138,19 +142,19 @@ class Trading():
             # If sell order failed after 5 seconds, 5 seconds more wait time before selling at loss
             time.sleep(self.WAIT_TIME_CHECK_SELL)
             
-            if self.stop(symbol, quantity, sell_id, last_price):
+            if self.stop(symbol, quantity, self.sell_id, last_price):
                 
-                if Orders.get_order(symbol, sell_id)['status'] != 'FILLED':
+                if Orders.get_order(symbol, self.sell_id)['status'] != 'FILLED':
                     print('We apologize... Sold at loss...')
                     
             else:
                 print('We apologize... Cant sell even at loss... Please sell manually... Stopping program...')
-                self.cancel(symbol, sell_id)
+                self.cancel(symbol, self.sell_id)
                 exit(1)
             
             while (sell_status != 'FILLED'):
                 time.sleep(self.WAIT_TIME_CHECK_SELL)
-                sell_status = Orders.get_order(symbol, sell_id)['status']
+                sell_status = Orders.get_order(symbol, self.sell_id)['status']
                 lastPrice = Orders.get_ticker(symbol)
                 print('Status: %s Current price: %.8f Sell price: %.8f' % (sell_status, lastPrice, sell_price))
                 print('Sold! Continue trading...')
@@ -180,7 +184,7 @@ class Trading():
    
                     print('Stop-loss, sell market, %s' % (last_price))
         
-                    sell_id = sello['orderId']
+                    sefl.sell_id = sello['orderId']
                 
                     if sello == True:
                         return True
@@ -192,7 +196,7 @@ class Trading():
                             print('Stop-loss, sold')
                             return True
                         else:
-                            self.cancel(symbol, sell_id)
+                            self.cancel(symbol, self.sell_id)
                             return False
                 else:
                     sello = Orders.sell_limit(symbol, quantity, lossprice)
@@ -203,7 +207,7 @@ class Trading():
                         print('Stop-loss, sold')
                         return True
                     else:
-                        self.cancel(symbol, sell_id)
+                        self.cancel(symbol, self.sell_id)
                         return False
             else:
                 print('Cancel did not work... Might have been sold before stop loss...')
