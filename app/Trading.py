@@ -369,7 +369,7 @@ class Trading():
         try:
 
             #Estimated sell price considering commision
-            return lastBid + (lastBid * self.option.profit / 100) + (lastBid *self.commision), lastBid + (lastBid * self.option.profit / 100)
+            return lastBid + (lastBid * self.option.profit / 100) + (lastBid *self.commision)
             #return lastBid + (lastBid * self.option.profit / 100)
 
         except Exception as e:
@@ -401,7 +401,7 @@ class Trading():
         sellPrice = lastAsk - self.decreasing
 
         # Spread ( profit )
-        profitableSellingPrice, original = self.calc(lastBid)
+        profitableSellingPrice = self.calc(lastBid)
 
         # Check working mode
         if self.option.mode == 'range':
@@ -414,7 +414,7 @@ class Trading():
         if self.option.prints and self.order_id == 0:
             spreadPerc = (lastAsk/lastBid - 1) * 100.0
             #print('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f spread:%.2f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, spreadPerc))
-            self.logger.debug('price:%.8f buyprice:%.8f sellprice:%.8f bid:%.8f ask:%.8f spread:%.2f  Originalsellprice:%.8f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, spreadPerc, original))
+            self.logger.debug('price:%.8f buyprice:%.8f sellprice:%.8f bid:%.8f ask:%.8f spread:%.2f  Originalsellprice:%.8f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, spreadPerc, profitableSellingPrice-(lastBid *self.commision)   ))
 
         # analyze = threading.Thread(target=analyze, args=(symbol,))
         # analyze.start()
