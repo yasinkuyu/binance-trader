@@ -5,5 +5,5 @@ class Messages():
     
     @staticmethod
     def get(msg):
-        print('Message : ' + msg)
+        print('m: ' + msg)
         exit(1)
