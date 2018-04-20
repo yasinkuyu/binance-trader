@@ -65,7 +65,7 @@ class Orders():
             return True
         
         except Exception as e:
-            print('co: %s' % e)
+            print('cancel_order Exception: %s' % e)
             return False
 
     @staticmethod
@@ -79,7 +79,7 @@ class Orders():
             return lastBid, lastAsk
     
         except Exception as e:
-            print('ob: %s' % e)
+            print('get_order_book Exception: %s' % e)
             return 0, 0
 
     @staticmethod
@@ -89,13 +89,14 @@ class Orders():
             order = client.query_order(symbol, orderId)
 
             if 'msg' in order:
-                return False
+                #import ipdb; ipdb.set_trace()
                 Messages.get(order['msg']) # TODO
+                return False
 
             return order
 
         except Exception as e:
-            print('go: %s' % e)
+            print('get_order Exception: %s' % e)
             return False
     
     @staticmethod
@@ -110,7 +111,7 @@ class Orders():
             return order['status']
  
         except Exception as e:
-            print('gos: %s' % e)
+            print('get_order_status Exception: %s' % e)
             return None
     
     @staticmethod
@@ -121,7 +122,7 @@ class Orders():
  
             return float(ticker['lastPrice'])
         except Exception as e:
-            print('gt: %s' % e)
+            print('Get Ticker Exeption: %s' % e)
     
     @staticmethod
     def get_info(symbol):
@@ -135,4 +136,4 @@ class Orders():
             return info
             
         except Exception as e:
-            print('gi: %s' % e)
+            print('get_info Exception: %s' % e)
