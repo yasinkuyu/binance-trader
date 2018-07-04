@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 # @yasinkuyu
 
@@ -7,9 +8,9 @@ import argparse
 sys.path.insert(0, './app')
 
 from Trading import Trading
-      
+
 if __name__ == '__main__':
-    
+
     # Set parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--quantity', type=float, help='Buy/Sell Quantity', default=0)
@@ -22,7 +23,7 @@ if __name__ == '__main__':
     parser.add_argument('--increasing', type=float, help='Buy Price +Increasing (0.00000001)', default=0.00000001)
     parser.add_argument('--decreasing', type=float, help='Sell Price -Decreasing (0.00000001)', default=0.00000001)
 
-    # Manually defined --orderid try to sell 
+    # Manually defined --orderid try to sell
     parser.add_argument('--orderid', type=int, help='Target Order Id (use balance.py)', default=0)
 
     parser.add_argument('--wait_time', type=float, help='Wait Time (seconds)', default=0.7)
@@ -37,11 +38,11 @@ if __name__ == '__main__':
     #  - range: Between target two price, buy and sell. (Ex: <= 0.00100 buy - >= 0.00150 sell )
     parser.add_argument('--mode', type=str, help='Working Mode', default='profit')
     parser.add_argument('--buyprice', type=float, help='Buy Price (Price is greater than equal <=)', default=0)
-    parser.add_argument('--sellprice', type=float, help='Sell Price (Price is small than equal >=)', default=0)
-    parser.add_argument('--commision', type=str, help='Type of comission, TOKEN/BNB (default BNB)', default='BNB')
+    parser.add_argument('--sellprice', type=float, help='Sell Price (Price is less than equal >=)', default=0)
+    parser.add_argument('--commision', type=str, help='Type of commission, TOKEN/BNB (default BNB)', default='BNB')
 
     option = parser.parse_args()
-    
+
     # Get start
     t = Trading(option)
     t.run()
