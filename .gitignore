@@ -3,6 +3,7 @@
 
 /app/config.py
 /db/orders.db
+/binance-trader.log
 
 **/env
 *.pyc

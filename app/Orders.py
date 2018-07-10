@@ -122,7 +122,7 @@ class Orders():
  
             return float(ticker['lastPrice'])
         except Exception as e:
-            print('Get Ticker Exeption: %s' % e)
+            print('Get Ticker Exception: %s' % e)
     
     @staticmethod
     def get_info(symbol):
