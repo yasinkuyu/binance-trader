@@ -124,9 +124,9 @@ class BinanceAPI:
     def _post(self, path, params={}):
         params.update({"recvWindow": 120000})
         query = urlencode(self._sign(params))
-        url = "%s?%s" % (path, query)
+        url = "%s" % (path)
         header = {"X-MBX-APIKEY": self.key}
-        return requests.post(url, headers=header, \
+        return requests.post(url, headers=header, data=query, \
             timeout=30, verify=True).json()
 
     def _order(self, market, quantity, side, rate=None):
