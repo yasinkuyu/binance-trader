@@ -566,7 +566,7 @@ class Trading():
 
         symbol = self.option.symbol
 
-        print('Auto Trading for Binance.com. @yasinkuyu Thrashformer')
+        print('Auto Trading for Binance.com @yasinkuyu')
         print('\n')
 
         # Validate symbol
