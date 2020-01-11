@@ -137,6 +137,7 @@ class Trading():
 
         except Exception as e:
             #print('bl: %s' % (e))
+            
             self.logger.debug('Buy error: %s' % (e))
             time.sleep(self.WAIT_TIME_BUY_SELL)
             return None
@@ -613,7 +614,6 @@ class Trading():
             # 0 = Unlimited loop
             if self.option.loop > 0:
                 cycle = cycle + 1
-
         """
 
         while (cycle <= self.option.loop):
