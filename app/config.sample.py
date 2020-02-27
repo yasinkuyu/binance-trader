@@ -1,9 +1,10 @@
 # @yasinkuyu
 
-# Get an Key and Secret 
+# Get an Key and Secret
 # https://www.binance.com/restapipub.html
 
 api_key = ''
 api_secret = ''
 
-recv_window = 6000000
+# recvWindow should less than 60000
+recv_window = 5000
