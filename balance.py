@@ -60,45 +60,55 @@ class Binance:
 
 try:
 
-    m = Binance()
+    while True:
+        m = Binance()
 
-    print('1 -) Print orders')
-    print('2 -) Scan profits')
-    print('3 -) List balances')
-    print('4 -) Check balance')
-    print('Enter option number: Ex: 2')
+        print('\n')
+        print('1 >> Print orders')
+        print('2 >> Scan profits')
+        print('3 >> List balances')
+        print('4 >> Check balance')
+        print('------------------')
+        print('0 >> Exit')
+        print('\nEnter option number:')
 
-    option = input()
+        option = input()
 
-    if option is '1':
+        if option=='1':
+            print('Enter symbol: (i.e. XVGBTC)')
 
-        print('Enter symbol: Ex: XVGBTC')
+            symbol = input()
 
-        symbol = input()
+            # Orders
+            print('%s Orders' % (symbol))
+            m.orders(symbol, 10)
 
-        # Orders
-        print('%s Orders' % (symbol))
-        m.orders(symbol, 10)
+        elif option=='2':      
+            print('Enter Asset (i.e. BTC, ETH, BNB)')
 
-    elif option is '3':
-        m.balances()
-    elif option is '4':
+            asset = input()
 
-        print('Enter asset: Ex: BTC')
+            print('Profits scanning...')
+            m.profits(asset)
+            
+        elif option=='3':      
+            m.balances()
+            
+        elif option=='4':
+            print('Enter asset: (i.e. BTC)')
 
-        symbol = input()
+            symbol = input()
 
-        print('%s balance' % (symbol))
+            print('%s balance' % (symbol))
 
-        m.balance(symbol)
-    else:
+            m.balance(symbol)
 
-        print('Enter Asset (Ex: BTC, ETC, BNB, USDT)')
+        elif option=='0':
+            break
+        
+        else:
+            print('Option not reconigzed')
 
-        asset = input()
-
-        print('Profits scanning...')
-        m.profits(asset)
 
 except Exception as e:
     print('Exception: %s' % e)
