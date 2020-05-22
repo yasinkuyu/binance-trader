@@ -51,13 +51,22 @@ class Binance:
             if coin['quoteAsset'] == asset:
 
                 orders = self.client.get_order_books(coin['symbol'], 5)
-                lastBid = float(orders['bids'][0][0]) #last buy price (bid)
-                lastAsk = float(orders['asks'][0][0]) #last sell price (ask)
+                
+                if len(orders['bids'])>0 and len(orders['asks'])>0:
+                    
+                    lastBid = float(orders['bids'][0][0]) #last buy price (bid)
+                    lastAsk = float(orders['asks'][0][0]) #last sell price (ask)
 
-                profit = (lastAsk - lastBid) /  lastBid * 100
+                    if lastBid!=0: 
+                        profit = (lastAsk - lastBid) /  lastBid * 100
+                    else:
+                        profit = 0
 
-                print('%.2f%% profit : %s (bid:%.8f-ask%.8f)' % (profit, coin['symbol'], lastBid, lastAsk))
+                    print('%6.2f%% profit : %s (bid: %.8f / ask: %.8f)' % (profit, coin['symbol'], lastBid, lastAsk))
 
+                else:
+                    print('---.--%% profit : %s (No bid/ask info retrieved)' % (coin['symbol']))
+                    
 try:
 
     while True:
