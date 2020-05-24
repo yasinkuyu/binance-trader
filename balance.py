@@ -68,7 +68,8 @@ class Binance:
             dateF=datetime.strptime(dateF, "%d/%m/%Y %H:%M:%S")
         else:
             dateF=dateS + timedelta(seconds=59)
-            
+
+        print('\nRetrieving values...\n')    
         klines = self.client.get_klines(symbol, kline_size, int(dateS.timestamp()*1000), int(dateF.timestamp()*1000))
 
         if len(klines)>0:
