@@ -7,13 +7,13 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
 ## Configuration
 
 1. [Signup](https://www.binance.com/?ref=10701111) for Binance
-1. Enable Two-factor Authentication
-1. Go API Center, [Create New](https://www.binance.com/userCenter/createApi.html) Api Key
+2. Enable Two-factor Authentication
+3. Go API Center, [Create New](https://www.binance.com/userCenter/createApi.html) Api Key
 
         [✓] Read Info [✓] Enable Trading [X] Enable Withdrawals
 
-1. Rename **config.sample.py** to `config.py` / **orders.sample.db** to `orders.db`
-1. Get an API and Secret Key, insert into `config.py`
+4. Rename **config.sample.py** to `config.py` / **orders.sample.db** to `orders.db`
+5. Get an API and Secret Key, insert into `config.py`
 
         API key for account access
         api_key = ''
@@ -22,7 +22,9 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
 
         [API Docs](https://www.binance.com/restapipub.html)
 
-1. Optional: run as an excutable application in Docker containers
+6. Optional: Modify recv_window value (not recommended)
+
+7. Optional: run as an excutable application in Docker containers
 
 ## Requirements
 
@@ -37,7 +39,7 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
         import threading
         import sqlite3
 
-## Usage
+## Usage (trading module)
 
     python trader.py --symbol XVGBTC
 
@@ -88,6 +90,10 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
         trader.py --symbol NEOBTC --amount 0.1 --profit 1.1
         trader.py --symbol ETHUSDT --quantity 0.3 --profit 1.5
         ...
+
+## Usage (balances module)
+
+    python balance.py
 
 ## Run in a Docker container
 
