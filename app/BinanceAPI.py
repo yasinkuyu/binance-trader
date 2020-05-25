@@ -20,6 +20,10 @@ class BinanceAPI:
         self.key = key
         self.secret = secret
 
+    def ping(self):
+        path = "%s/ping" % self.BASE_URL_V3
+        return requests.get(path, timeout=30, verify=True).json()
+    
     def get_history(self, market, limit=50):
         path = "%s/historicalTrades" % self.BASE_URL
         params = {"symbol": market, "limit": limit}
@@ -31,7 +35,7 @@ class BinanceAPI:
         return self._get_no_sign(path, params)
         
     def get_klines(self, market, interval, startTime, endTime):
-        path = "%s/klines" % self.BASE_URL
+        path = "%s/klines" % self.BASE_URL_V3
         params = {"symbol": market, "interval":interval, "startTime":startTime, "endTime":endTime}
         return self._get_no_sign(path, params)
         
@@ -51,7 +55,11 @@ class BinanceAPI:
 
     def get_products(self):
         return requests.get(self.PUBLIC_URL, timeout=30, verify=True).json()
-        
+   
+    def get_server_time(self):
+        path = "%s/time" % self.BASE_URL_V3
+        return requests.get(path, timeout=30, verify=True).json()
+    
     def get_exchange_info(self):
         path = "%s/exchangeInfo" % self.BASE_URL
         return requests.get(path, timeout=30, verify=True).json()
@@ -104,9 +112,8 @@ class BinanceAPI:
     def _sign(self, params={}):
         data = params.copy()
 
-        ts = str(int(1000 * time.time()))
+        ts = int(1000 * time.time())
         data.update({"timestamp": ts})
-
         h = urlencode(data)
         b = bytearray()
         b.extend(self.secret.encode())
@@ -145,10 +152,7 @@ class BinanceAPI:
         params["quantity"] = '%.8f' % quantity
         
         return params
-
-    def _format(self, price):
-        return "{:.8f}".format(price)
-            
+           
     def _delete(self, path, params={}):
         params.update({"recvWindow": config.recv_window})
         query = urlencode(self._sign(params))
@@ -156,3 +160,6 @@ class BinanceAPI:
         header = {"X-MBX-APIKEY": self.key}
         return requests.delete(url, headers=header, \
             timeout=30, verify=True).json()
+
+    def _format(self, price):
+        return "{:.8f}".format(price)
