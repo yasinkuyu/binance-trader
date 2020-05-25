@@ -6,6 +6,7 @@ import sys
 
 sys.path.insert(0, './app')
 
+import time
 import config
 from datetime import timedelta, datetime
 from BinanceAPI import BinanceAPI
@@ -17,7 +18,7 @@ class Binance:
 
     def balances(self):
         balances = self.client.get_account()
-
+      
         for balance in balances['balances']:
             if float(balance['locked']) > 0 or float(balance['free']) > 0:
                 print('%s: %s' % (balance['asset'], balance['free']))
@@ -35,9 +36,22 @@ class Binance:
         
         return self.client.get_all_tickers()
 
-    def server_time(self):
-        
-        return self.client.get_server_time()
+    def server_status(self):
+        systemT=int(time.time()*1000)           #timestamp when requested was launch
+        serverT= self.client.get_server_time()  #timestamp when server replied
+        lag=int(serverT['serverTime']-systemT)
+
+        print('System timestamp: %d' % systemT)
+        print('Server timestamp: %d' % serverT['serverTime'])
+        print('Lag: %d' % lag)
+
+        if lag>1000:
+            print('\nNot good. Excessive lag (lag > 1000ms)')
+        elif lag<0:
+            print('\nNot good. System time ahead server time (lag < 0ms)')
+        else:  
+            print('\nGood (0ms > lag > 1000ms)')              
+        return
 
     def openorders(self):
         
@@ -69,7 +83,7 @@ class Binance:
         else:
             dateF=dateS + timedelta(seconds=59)
 
-        print('\nRetrieving values...\n')    
+        print('Retrieving values...\n')    
         klines = self.client.get_klines(symbol, kline_size, int(dateS.timestamp()*1000), int(dateF.timestamp()*1000))
 
         if len(klines)>0:
@@ -92,10 +106,14 @@ try:
         print('5 >> Market value (specific)')
         print('6 >> Market value (range)')
         print('-----------------------------')
+        print('7 >> Server status')
+        print('-----------------------------')
         print('0 >> Exit')
         print('\nEnter option number:')
 
         option = input()
+
+        print('\n')
 
         if option=='1':
             print('Enter pair: (i.e. XVGBTC)')
@@ -140,6 +158,9 @@ try:
             interval = input()
 
             klines=m.market_value(symbol, interval, dateS, dateF)
+
+        elif option=='7':
+            lag=m.server_status()
 
         elif option=='0':
             break
