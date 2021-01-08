@@ -8,7 +8,7 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
 
 1. [Signup](https://www.binance.com/?ref=10701111) for Binance
 2. Enable Two-factor Authentication
-3. Go API Center, [Create New](https://www.binance.com/userCenter/createApi.html) Api Key
+3. Go API Center, [Create New](https://www.binance.com/userCenter/createApi.html?ref=10701111) Api Key
 
         [✓] Read Info [✓] Enable Trading [X] Enable Withdrawals
 
@@ -25,6 +25,10 @@ This is an experimental bot for auto trading the binance.com exchange. [@yasinku
 6. Optional: Modify recv_window value (not recommended)
 
 7. Optional: run as an excutable application in Docker containers
+
+## Support
+
+[https://www.binance.com/?ref=10701111](https://www.binance.com/?ref=10701111)
 
 ## Requirements
 
