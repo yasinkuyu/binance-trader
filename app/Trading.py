@@ -628,7 +628,7 @@ class Trading():
 
            if endTime - startTime < self.wait_time:
 
-               time.sleep(self.wait_time - (endTime - startTime))
+               time.sleep(self.wait_time )
 
                # 0 = Unlimited loop
                if self.option.loop > 0:
