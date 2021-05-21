@@ -245,7 +245,7 @@ class Trading():
             if self.cancel(symbol, orderId):
 
                 # Stop loss
-                if last_price >= lossprice:
+                if last_price <= lossprice:
 
                     sello = Orders.sell_market(symbol, quantity)
 
@@ -267,17 +267,17 @@ class Trading():
                         else:
                             self.cancel(symbol, sell_id)
                             return False
-                else:
-                    sello = Orders.sell_limit(symbol, quantity, lossprice)
-                    print('Stop-loss, sell limit, %s' % (lossprice))
-                    time.sleep(self.WAIT_TIME_STOP_LOSS)
-                    statusloss = sello['status']
-                    if statusloss != 'NEW':
-                        print('Stop-loss, sold')
-                        return True
-                    else:
-                        self.cancel(symbol, sell_id)
-                        return False
+#                 else:
+#                     sello = Orders.sell_limit(symbol, quantity, lossprice)
+#                     print('Stop-loss, sell limit, %s' % (lossprice))
+#                     time.sleep(self.WAIT_TIME_STOP_LOSS)
+#                     statusloss = sello['status']
+#                     if statusloss != 'NEW':
+#                         print('Stop-loss, sold')
+#                         return True
+#                     else:
+#                         self.cancel(symbol, sell_id)
+#                         return False
             else:
                 print('Cancel did not work... Might have been sold before stop loss...')
                 return True
