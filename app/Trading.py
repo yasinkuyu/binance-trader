@@ -441,7 +441,7 @@ class Trading():
             try to sell it.
             '''
 
-            # Perform buy action
+            # Perform sell action
             sellAction = threading.Thread(target=self.sell, args=(symbol, quantity, self.order_id, profitableSellingPrice, lastPrice,))
             sellAction.start()
 
@@ -454,7 +454,7 @@ class Trading():
         '''
         if (lastAsk >= profitableSellingPrice and self.option.mode == 'profit') or \
            (lastPrice <= float(self.option.buyprice) and self.option.mode == 'range'):
-            self.logger.info ("MOde: {0}, Lastsk: {1}, Profit Sell Price {2}, ".format(self.option.mode, lastAsk, profitableSellingPrice))
+            self.logger.info ("Mode: {0}, Lastsk: {1}, Profit Sell Price {2}, ".format(self.option.mode, lastAsk, profitableSellingPrice))
 
             if self.order_id == 0:
                 self.buy(symbol, quantity, buyPrice, profitableSellingPrice)
