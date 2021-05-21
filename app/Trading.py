@@ -433,8 +433,8 @@ class Trading():
                     profitableSellingPrice = newProfitableSellingPrice
 
             # range mode
-            if self.option.mode == 'range':
-                profitableSellingPrice = self.option.sellprice
+            #if self.option.mode == 'range':
+            #    profitableSellingPrice = self.option.sellprice
 
             '''            
             If the order is complete, 
