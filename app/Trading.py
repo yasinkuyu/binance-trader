@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 # @yasinkuyu
 
-# Define Python imports
+# Import Python libraries
 import os
 import sys
 import time
@@ -11,34 +11,33 @@ import math
 import logging
 import logging.handlers
 
-
-# Define Custom imports
-from Database import Database
+# Import custom libraries
+from Database import Database  
 from Orders import Orders
 
 
-formater_str = '%(asctime)s,%(msecs)d %(levelname)s %(name)s: %(message)s'
-formatter = logging.Formatter(formater_str)
+formatter_str = '%(asctime)s,%(msecs)d %(levelname)s %(name)s: %(message)s'
+formatter = logging.Formatter(formatter_str)
 datefmt="%Y-%b-%d %H:%M:%S"
 
-LOGGER_ENUM = {'debug':'debug.log', 'trading':'trades.log','errors':'general.log'}
-#LOGGER_FILE = LOGGER_ENUM['pre']
-LOGGER_FILE = "binance-trader.log"
-FORMAT = '%(asctime)-15s - %(levelname)s:  %(message)s'
+logger_enums = {'debug':'debug.log', 'trading':'trades.log','errors':'general.log'}
+#logger_file = logger_enums['pre'] 
+logger_file = "binance-trader.log"
+log_format = '%(asctime)-15s - %(levelname)s:  %(message)s'
 
-logger = logging.basicConfig(filename=LOGGER_FILE, filemode='a',
-                             format=formater_str, datefmt=datefmt,
-                             level=logging.INFO)
+logging.basicConfig(filename=logger_file, filemode='a',
+                    format=formatter_str, datefmt=datefmt,
+                    level=logging.INFO)
 
-# Aproximated value to get back the commision for sell and buy
-TOKEN_COMMISION = 0.001
-BNB_COMMISION   = 0.0005
+# Approximated value to get back the commission for sell and buy
+token_commission = 0.001
+bnb_commission = 0.0005
 #((eth*0.05)/100)
 
 
 class Trading():
 
-    # Define trade vars  
+    # Define trade variables  
     order_id = 0
     order_data = None
 
@@ -48,10 +47,10 @@ class Trading():
     buy_filled_qty = 0
     sell_filled_qty = 0
 
-    # percent (When you drop 10%, sell panic.)
+    # Percent (When you drop 10%, sell panic.)
     stop_loss = 0
 
-    # Buy/Sell qty
+    # Buy/Sell quantity
     quantity = 0
 
     # BTC amount
@@ -60,16 +59,16 @@ class Trading():
     # float(step_size * math.floor(float(free)/step_size))
     step_size = 0
 
-    # Define static vars
-    WAIT_TIME_BUY_SELL = 1 # seconds
-    WAIT_TIME_CHECK_BUY_SELL = 0.2 # seconds
-    WAIT_TIME_CHECK_SELL = 5 # seconds
-    WAIT_TIME_STOP_LOSS = 20 # seconds
+    # Define static variables
+    wait_time_buy_sell = 1 # seconds
+    wait_time_check_buy_sell = 0.2 # seconds
+    wait_time_check_sell = 5 # seconds
+    wait_time_stop_loss = 20 # seconds
 
-    MAX_TRADE_SIZE = 7 # int
+    max_trade_size = 7 # int
 
-    # Type of commision, Default BNB_COMMISION
-    commision = BNB_COMMISION
+    # Type of commission, Default BNB_COMMISION
+    commission = bnb_commission
 
     def __init__(self, option):
         print("options: {0}".format(option))
@@ -77,9 +76,9 @@ class Trading():
         # Get argument parse options
         self.option = option
 
-        # Define parser vars
+        # Define parser variables
         self.order_id = self.option.orderid
-        self.quantity = self.option.quantity
+        self.quantity = self.option.quantity 
         self.wait_time = self.option.wait_time
         self.stop_loss = self.option.stop_loss
 
@@ -89,35 +88,31 @@ class Trading():
         # BTC amount
         self.amount = self.option.amount
 
-        # Type of commision
-        if self.option.commision == 'TOKEN':
-            self.commision = TOKEN_COMMISION
+        # Type of commission      
+        if self.option.commission == 'TOKEN':
+            self.commission = token_commission
 
-        # setup Logger
+        # Setup logger
         self.logger =  self.setup_logger(self.option.symbol, debug=self.option.debug)
 
     def setup_logger(self, symbol, debug=True):
-        """Function setup as many loggers as you want"""
-        #handler = logging.FileHandler(log_file)
-        #handler.setFormatter(formatter)
-        #logger.addHandler(handler)
+        """Function to setup loggers"""
+        
         logger = logging.getLogger(symbol)
 
-        stout_handler = logging.StreamHandler(sys.stdout)
+        stdout_handler = logging.StreamHandler(sys.stdout)
         if debug:
-            logger.setLevel(logging.DEBUG)
-            stout_handler.setLevel(logging.DEBUG)
+            logger.setLevel(logging.DEBUG) 
+            stdout_handler.setLevel(logging.DEBUG)
 
-        #handler = logging.handlers.SysLogHandler(address='/dev/log')
-        #logger.addHandler(handler)
-        stout_handler.setFormatter(formatter)
-        logger.addHandler(stout_handler)
+        stdout_handler.setFormatter(formatter)
+        logger.addHandler(stdout_handler)
         return logger
 
 
     def buy(self, symbol, quantity, buyPrice, profitableSellingPrice):
 
-        # Do you have an open order?
+        # Check if you have an open order
         self.check_order()
 
         try:
@@ -139,7 +134,7 @@ class Trading():
             #print('bl: %s' % (e))
             
             self.logger.debug('Buy error: %s' % (e))
-            time.sleep(self.WAIT_TIME_BUY_SELL)
+            time.sleep(self.wait_time_buy_sell)
             return None
 
     def sell(self, symbol, quantity, orderId, sell_price, last_price):
@@ -155,7 +150,7 @@ class Trading():
             #print('Buy order filled... Try sell...')
             self.logger.info('Buy order filled... Try sell...')
         else:
-            time.sleep(self.WAIT_TIME_CHECK_BUY_SELL)
+            time.sleep(self.wait_time_check_buy_sell)
             if buy_order['status'] == 'FILLED' and buy_order['side'] == 'BUY':
                 #print('Buy order filled after 0.1 second... Try sell...')
                 self.logger.info('Buy order filled after 0.1 second... Try sell...')
@@ -176,7 +171,7 @@ class Trading():
         #print('Sell order create id: %d' % sell_id)
         self.logger.info('Sell order create id: %d' % sell_id)
 
-        time.sleep(self.WAIT_TIME_CHECK_SELL)
+        time.sleep(self.wait_time_check_sell)
 
         if sell_order['status'] == 'FILLED':
 
@@ -202,7 +197,7 @@ class Trading():
         if self.stop_loss > 0:
 
             # If sell order failed after 5 seconds, 5 seconds more wait time before selling at loss
-            time.sleep(self.WAIT_TIME_CHECK_SELL)
+            time.sleep(self.wait_time_check_sell)
 
             if self.stop(symbol, quantity, sell_id, last_price):
 
@@ -217,7 +212,7 @@ class Trading():
                 exit(1)
 
             while (sell_status != 'FILLED'):
-                time.sleep(self.WAIT_TIME_CHECK_SELL)
+                time.sleep(self.wait_time_check_sell)
                 sell_status = Orders.get_order(symbol, sell_id)['status']
                 lastPrice = Orders.get_ticker(symbol)
                 #print('Status: %s Current price: %.8f Sell price: %.8f' % (sell_status, lastPrice, sell_price))
@@ -259,7 +254,7 @@ class Trading():
                         return True
                     else:
                         # Wait a while after the sale to the loss.
-                        time.sleep(self.WAIT_TIME_STOP_LOSS)
+                        time.sleep(self.wait_time_stop_loss)
                         statusloss = sello['status']
                         if statusloss != 'NEW':
                             print('Stop-loss, sold')
@@ -271,7 +266,7 @@ class Trading():
                 else:
                     sello = Orders.sell_limit(symbol, quantity, lossprice)
                     print('Stop-loss, sell limit, %s' % (lossprice))
-                    time.sleep(self.WAIT_TIME_STOP_LOSS)
+                    time.sleep(self.wait_time_stop_loss)
                     statusloss = sello['status']
                     if statusloss != 'NEW':
                         print('Stop-loss, sold')
@@ -294,13 +289,13 @@ class Trading():
     def check(self, symbol, orderId, quantity):
         # If profit is available and there is no purchase from the specified price, take it with the market.
 
-        # Do you have an open order?
+        # Check if you have an open order
         self.check_order()
 
         trading_size = 0
-        time.sleep(self.WAIT_TIME_BUY_SELL)
+        time.sleep(self.wait_time_buy_sell)
 
-        while trading_size < self.MAX_TRADE_SIZE:
+        while trading_size < self.max_trade_size:
 
             # Order info
             order = Orders.get_order(symbol, orderId)
@@ -308,7 +303,7 @@ class Trading():
             side  = order['side']
             price = float(order['price'])
 
-            # TODO: Sell partial qty
+            # TODO: Sell partial quantity
             orig_qty = float(order['origQty'])
             self.buy_filled_qty = float(order['executedQty'])
 
@@ -369,8 +364,8 @@ class Trading():
     def calc(self, lastBid):
         try:
 
-            #Estimated sell price considering commision
-            return lastBid + (lastBid * self.option.profit / 100) + (lastBid *self.commision)
+            #Estimated sell price considering commission
+            return lastBid + (lastBid * self.option.profit / 100) + (lastBid *self.commission)
             #return lastBid + (lastBid * self.option.profit / 100)
 
         except Exception as e:
@@ -389,33 +384,33 @@ class Trading():
         # Order amount
         quantity = self.quantity
 
-        # Fetches the ticker price
+        # Get ticker price
         lastPrice = Orders.get_ticker(symbol)
 
         # Order book prices
         lastBid, lastAsk = Orders.get_order_book(symbol)
 
-        # Target buy price, add little increase #87
+        # Target buy price, add little increase 
         buyPrice = lastBid + self.increasing
 
-        # Target sell price, decrease little 
+        # Target sell price, decrease little
         sellPrice = lastAsk - self.decreasing
 
-        # Spread ( profit )
+        # Spread (profit)
         profitableSellingPrice = self.calc(lastBid)
 
         # Check working mode
         if self.option.mode == 'range':
 
-            buyPrice = float(self.option.buyprice)
-            sellPrice = float(self.option.sellprice)
-            profitableSellingPrice = sellPrice
+           buyPrice = float(self.option.buyprice)
+           sellPrice = float(self.option.sellprice)
+           profitableSellingPrice = sellPrice
 
-        # Screen log
+        # Log to screen
         if self.option.prints and self.order_id == 0:
             spreadPerc = (lastAsk/lastBid - 1) * 100.0
             #print('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f spread:%.2f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, spreadPerc))
-            self.logger.debug('price:%.8f buyprice:%.8f sellprice:%.8f bid:%.8f ask:%.8f spread:%.2f  Originalsellprice:%.8f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, spreadPerc, profitableSellingPrice-(lastBid *self.commision)   ))
+            self.logger.debug('price:%.8f buyprice:%.8f sellprice:%.8f bid:%.8f ask:%.8f spread:%.2f  Originalsellprice:%.8f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, spreadPerc, profitableSellingPrice-(lastBid *self.commission)   ))
 
         # analyze = threading.Thread(target=analyze, args=(symbol,))
         # analyze.start()
@@ -433,7 +428,7 @@ class Trading():
                 if (lastAsk >= newProfitableSellingPrice):
                     profitableSellingPrice = newProfitableSellingPrice
 
-            # range mode
+            # Range mode
             if self.option.mode == 'range':
                 profitableSellingPrice = self.option.sellprice
 
@@ -442,27 +437,28 @@ class Trading():
             try to sell it.
             '''
 
-            # Perform buy action
-            sellAction = threading.Thread(target=self.sell, args=(symbol, quantity, self.order_id, profitableSellingPrice, lastPrice,))
-            sellAction.start()
+            # Sell in a separate thread
+            sell_action = threading.Thread(target=self.sell, args=(symbol, quantity, self.order_id, profitableSellingPrice, lastPrice,))
+            sell_action.start()
 
             return
 
         '''
-        Did profit get caught
+        Check if profit price reached
         if ask price is greater than profit price, 
-        buy with my buy price,    
+        buy at my buy price,    
         '''
         if (lastAsk >= profitableSellingPrice and self.option.mode == 'profit') or \
            (lastPrice <= float(self.option.buyprice) and self.option.mode == 'range'):
-            self.logger.info ("MOde: {0}, Lastsk: {1}, Profit Sell Price {2}, ".format(self.option.mode, lastAsk, profitableSellingPrice))
+            
+            self.logger.info ("Mode: {0}, LastAsk: {1}, Profitable Sell Price: {2}".format(self.option.mode, lastAsk, profitableSellingPrice))
 
             if self.order_id == 0:
                 self.buy(symbol, quantity, buyPrice, profitableSellingPrice)
 
-                # Perform check/sell action
-                # checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
-                # checkAction.start()
+                # Check/sell in a separate thread
+                # check_action = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
+                # check_action.start()
 
     def logic(self):
         return 0
@@ -486,150 +482,128 @@ class Trading():
     def format_step(self, quantity, stepSize):
         return float(stepSize * math.floor(float(quantity)/stepSize))
 
-    def validate(self):
+def validate(self):
 
-        valid = True
-        symbol = self.option.symbol
-        filters = self.filters()['filters']
+    valid = True
+    symbol = self.option.symbol
+    filters = self.filters()['filters']
 
-        # Order book prices
-        lastBid, lastAsk = Orders.get_order_book(symbol)
+    # Order book prices
+    lastBid, lastAsk = Orders.get_order_book(symbol)  
 
-        lastPrice = Orders.get_ticker(symbol)
+    lastPrice = Orders.get_ticker(symbol)
 
-        minQty = float(filters['LOT_SIZE']['minQty'])
-        minPrice = float(filters['PRICE_FILTER']['minPrice'])
-        minNotional = float(filters['MIN_NOTIONAL']['minNotional'])
-        quantity = float(self.option.quantity)
+    minQty = float(filters['LOT_SIZE']['minQty'])
+    minPrice = float(filters['PRICE_FILTER']['minPrice'])
+    minNotional = float(filters['MIN_NOTIONAL']['minNotional'])
+    quantity = float(self.option.quantity)
 
-        # stepSize defines the intervals that a quantity/icebergQty can be increased/decreased by.
-        stepSize = float(filters['LOT_SIZE']['stepSize'])
+    # stepSize defines the intervals that a quantity/icebergQty can be increased/decreased by.
+    stepSize = float(filters['LOT_SIZE']['stepSize'])
 
-        # tickSize defines the intervals that a price/stopPrice can be increased/decreased by
-        tickSize = float(filters['PRICE_FILTER']['tickSize'])
+    # tickSize defines the intervals that a price/stopPrice can be increased/decreased by
+    tickSize = float(filters['PRICE_FILTER']['tickSize'])
 
-        # If option increasing default tickSize greater than
-        if (float(self.option.increasing) < tickSize):
-            self.increasing = tickSize
+    # If option increasing default tickSize greater than
+    if float(self.option.increasing) < tickSize:
+        self.increasing = tickSize
 
-        # If option decreasing default tickSize greater than
-        if (float(self.option.decreasing) < tickSize):
-            self.decreasing = tickSize
+    # If option decreasing default tickSize greater than
+    if float(self.option.decreasing) < tickSize:
+        self.decreasing = tickSize
 
-        # Just for validation
-        lastBid = lastBid + self.increasing
+    # Just for validation
+    lastBid = lastBid + self.increasing
 
-        # Set static
-        # If quantity or amount is zero, minNotional increase 10%
-        quantity = (minNotional / lastBid)
-        quantity = quantity + (quantity * 10 / 100)
-        notional = minNotional
+    # Set static
+    # If quantity or amount is zero, minNotional increase 10% 
+    quantity = (minNotional / lastBid)
+    quantity = quantity + (quantity * 0.10) 
+    notional = minNotional
 
-        if self.amount > 0:
-            # Calculate amount to quantity
-            quantity = (self.amount / lastBid)
+    if self.amount > 0:
+        # Calculate amount to quantity
+        quantity = (self.amount / lastBid)
 
-        if self.quantity > 0:
-            # Format quantity step
-            quantity = self.quantity
+    if self.quantity > 0:
+        # Format quantity step 
+        quantity = self.quantity
+    
+    quantity = self.format_step(quantity, stepSize)
+    notional = lastBid * float(quantity)
 
-        quantity = self.format_step(quantity, stepSize)
-        notional = lastBid * float(quantity)
+    # Set globals
+    self.quantity = quantity
+    self.step_size = stepSize
 
-        # Set Globals
-        self.quantity = quantity
-        self.step_size = stepSize
+    # minQty = minimum order quantity
+    if quantity < minQty:
+        self.logger.error('Invalid quantity, minQty: %.8f (u: %.8f)' % (minQty, quantity))
+        valid = False
 
-        # minQty = minimum order quantity
-        if quantity < minQty:
-            #print('Invalid quantity, minQty: %.8f (u: %.8f)' % (minQty, quantity))
-            self.logger.error('Invalid quantity, minQty: %.8f (u: %.8f)' % (minQty, quantity))
-            valid = False
+    if lastPrice < minPrice:
+        self.logger.error('Invalid price, minPrice: %.8f (u: %.8f)' % (minPrice, lastPrice))
+        valid = False
 
-        if lastPrice < minPrice:
-            #print('Invalid price, minPrice: %.8f (u: %.8f)' % (minPrice, lastPrice))
-            self.logger.error('Invalid price, minPrice: %.8f (u: %.8f)' % (minPrice, lastPrice))
-            valid = False
+    # minNotional = minimum order value (price * quantity) 
+    if notional < minNotional:
+        self.logger.error('Invalid notional, minNotional: %.8f (u: %.8f)' % (minNotional, notional))
+        valid = False
 
-        # minNotional = minimum order value (price * quantity)
-        if notional < minNotional:
-            #print('Invalid notional, minNotional: %.8f (u: %.8f)' % (minNotional, notional))
-            self.logger.error('Invalid notional, minNotional: %.8f (u: %.8f)' % (minNotional, notional))
-            valid = False
+    if not valid:
+        exit(1)
+        
 
-        if not valid:
-            exit(1)
+def run(self):
 
-    def run(self):
+    cycle = 0
+    actions = []
 
-        cycle = 0
-        actions = []
+    symbol = self.option.symbol
 
-        symbol = self.option.symbol
+    print('Auto Trading for Binance.com. @yasinkuyu Thrashformer')
+    print('\n')
 
-        print('Auto Trading for Binance.com. @yasinkuyu Thrashformer')
-        print('\n')
+    # Validate symbol
+    self.validate()
 
-        # Validate symbol
-        self.validate()
+    print('Started...')
+    print('Trading Symbol: %s' % symbol)
+    print('Buy Quantity: %.8f' % self.quantity)
+    print('Stop-Loss Amount: %s' % self.stop_loss)
+    #print('Estimated profit: %.8f' % (self.quantity*self.option.profit))
 
-        print('Started...')
-        print('Trading Symbol: %s' % symbol)
-        print('Buy Quantity: %.8f' % self.quantity)
-        print('Stop-Loss Amount: %s' % self.stop_loss)
-        #print('Estimated profit: %.8f' % (self.quantity*self.option.profit))
+    if self.option.mode == 'range':
+       
+       if self.option.buyprice == 0 or self.option.sellprice == 0:
+           print('Please enter --buyprice / --sellprice\n')
+           exit(1)
+           
+       print('Range Mode Options:')
+       print('\tBuy Price: %.8f' % self.option.buyprice)
+       print('\tSell Price: %.8f' % self.option.sellprice)
 
-        if self.option.mode == 'range':
+    else:
+       print('Profit Mode Options:')
+       print('\tPreferred Profit: %0.2f%%' % self.option.profit)  
+       print('\tBuy Price : (Bid+ --increasing %.8f)' % self.increasing)
+       print('\tSell Price: (Ask- --decreasing %.8f)' % self.decreasing)
 
-           if self.option.buyprice == 0 or self.option.sellprice == 0:
-               print('Please enter --buyprice / --sellprice\n')
-               exit(1)
+    print('\n')
 
-           print('Range Mode Options:')
-           print('\tBuy Price: %.8f', self.option.buyprice)
-           print('\tSell Price: %.8f', self.option.sellprice)
-
-        else:
-            print('Profit Mode Options:')
-            print('\tPreferred Profit: %0.2f%%' % self.option.profit)
-            print('\tBuy Price : (Bid+ --increasing %.8f)' % self.increasing)
-            print('\tSell Price: (Ask- --decreasing %.8f)' % self.decreasing)
-
-        print('\n')
-
-        startTime = time.time()
-
-        """
-        # DEBUG LINES
-        actionTrader = threading.Thread(target=self.action, args=(symbol,))
-        actions.append(actionTrader)
-        actionTrader.start()
-
-        endTime = time.time()
-
-        if endTime - startTime < self.wait_time:
-
-            time.sleep(self.wait_time - (endTime - startTime))
-
-            # 0 = Unlimited loop
-            if self.option.loop > 0:
-                cycle = cycle + 1
-        """
-
-        while (cycle <= self.option.loop):
-
-           startTime = time.time()
-
-           actionTrader = threading.Thread(target=self.action, args=(symbol,))
-           actions.append(actionTrader)
-           actionTrader.start()
-
-           endTime = time.time()
-
-           if endTime - startTime < self.wait_time:
-
-               time.sleep(self.wait_time - (endTime - startTime))
-
-               # 0 = Unlimited loop
-               if self.option.loop > 0:
-                   cycle = cycle + 1
+    while cycle <= self.option.loop:
+        
+       start_time = time.time()
+        
+       action_trader = threading.Thread(target=self.action, args=(symbol,))
+       actions.append(action_trader)
+       action_trader.start()
+        
+       end_time = time.time()
+        
+       if end_time - start_time < self.wait_time:
+           time.sleep(self.wait_time - (end_time - start_time))
+           
+           # 0 = Unlimited loop
+           if self.option.loop > 0:
+               cycle += 1

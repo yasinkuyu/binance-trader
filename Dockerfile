@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.12.0b4-slim
 ADD app/ /app
 ADD db/ /db
 aDD trader.py /app

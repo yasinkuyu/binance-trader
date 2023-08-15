@@ -2,13 +2,8 @@ import time
 import hashlib
 import requests
 import hmac
+from urllib.parse import urlencode
 
-try:
-    from urllib import urlencode
-# python3
-except ImportError:
-    from urllib.parse import urlencode
- 
 class BinanceAPI:
     
     BASE_URL = "https://www.binance.com/api/v1"

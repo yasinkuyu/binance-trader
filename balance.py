@@ -1,13 +1,10 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 # @yasinkuyu
 
 import sys
-
 sys.path.insert(0, './app')
-
 from BinanceAPI import BinanceAPI
-
 import config
 
 class Binance:
@@ -27,11 +24,11 @@ class Binance:
 
         balances['balances'] = {item['asset']: item for item in balances['balances']}
         
-        print balances['balances'][asset]['free']
+        print(balances['balances'][asset]['free'])
                  
     def orders(self, symbol, limit):
         orders = self.client.get_open_orders(symbol, limit)
-        print orders
+        print(orders)
 
     def tickers(self):
         return self.client.get_all_tickers()
@@ -68,25 +65,25 @@ try:
     print('4 -) Check balance')
     print('Enter option number: Ex: 2')
 
-    option = raw_input()
+    option = input()
     
-    if option is '1':
+    if option == '1':
         
         print('Enter symbol: Ex: XVGBTC')
         
-        symbol = raw_input()
+        symbol = input()
         
         # Orders
         print('%s Orders' % (symbol))
         m.orders(symbol, 10)
     
-    elif option is '3':
+    elif option == '3':
         m.balances()
-    elif option is '4':
+    elif option == '4':
         
         print('Enter asset: Ex: BTC')
         
-        symbol = raw_input()
+        symbol = input()
         
         print('%s balance' % (symbol))
         
@@ -95,9 +92,9 @@ try:
         
         print('Enter Asset (Ex: BTC, ETC, BNB, USDT)')
         
-        asset = raw_input()
+        asset = input()
         
-        print 'Profits scanning...'
+        print('Profits scanning...')
         m.profits(asset)
 
 except 'BinanceAPIException' as e:

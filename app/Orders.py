@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 # @yasinkuyu
-import config 
-
+import config
 from BinanceAPI import BinanceAPI
 from Messages import Messages
 
