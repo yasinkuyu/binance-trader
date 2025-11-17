@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  bollinger-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.bollinger
+    container_name: binance-bollinger-bot
+    restart: unless-stopped
+    environment:
+      # Trading Configuration
+      - SYMBOL=BTCUSDT
+      - AMOUNT=100
+      - INTERVAL=5m
+
+      # Strategy Parameters
+      - BB_PERIOD=20
+      - BB_STDDEV=2.0
+      - RSI_PERIOD=14
+      - RSI_OVERSOLD=30
+      - RSI_OVERBOUGHT=70
+
+      # Risk Management
+      - MIN_CONFIDENCE=50
+      - RISK_PER_TRADE=2.0
+      - STOP_LOSS_ATR=2.0
+
+      # Bot Behavior
+      - WAIT_TIME=10
+      - TEST_MODE=true  # Set to false for live trading
+
+    volumes:
+      # Mount config file (contains API keys)
+      - ./app/config.py:/app/app/config.py:ro
+      # Mount database for persistence
+      - ./db:/app/db
+      # Mount logs for monitoring
+      - ./logs:/app/logs
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Usage:
+# 1. Edit app/config.py with your API keys
+# 2. Test mode: docker-compose -f docker-compose.bollinger.yml up
+# 3. Live trading: Edit TEST_MODE=false, then docker-compose -f docker-compose.bollinger.yml up -d
+# 4. View logs: docker-compose -f docker-compose.bollinger.yml logs -f
+# 5. Stop: docker-compose -f docker-compose.bollinger.yml down
