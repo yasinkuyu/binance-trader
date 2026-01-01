@@ -189,6 +189,9 @@ class Trading():
             sell_order = Orders.sell_limit(symbol, actual_quantity, sell_price)
         else:
             self.logger.warning('No quantity to sell - executedQty not available or zero')
+            with self._lock:
+                self.order_id = 0
+                self.order_data = None
             return
 
         sell_id = sell_order['orderId']
@@ -527,7 +530,8 @@ class Trading():
     def format_step(self, quantity, stepSize):
         quantity = Decimal(str(quantity))
         step = Decimal(str(stepSize))
-        return float(quantity.quantize(step, rounding=ROUND_DOWN))
+        # Ensure quantity is a multiple of stepSize by using floor division
+        return float((quantity // step) * step)
 
     def validate(self):
 
