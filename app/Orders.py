@@ -17,9 +17,10 @@ class Orders():
 
         if 'msg' in order:
             Messages.get(order['msg'])
+            return None
 
         # Buy order created.
-        return order['orderId']
+        return order.get('orderId')
 
     @staticmethod
     def sell_limit(symbol, quantity, sell_price):

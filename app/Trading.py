@@ -10,6 +10,7 @@ import threading
 import math
 import logging
 import logging.handlers
+from decimal import Decimal, ROUND_DOWN
 
 
 # Define Custom imports
@@ -93,6 +94,9 @@ class Trading():
         if self.option.commision == 'TOKEN':
             self.commision = TOKEN_COMMISION
 
+        # Thread safety lock
+        self._lock = threading.Lock()
+
         # setup Logger
         self.logger =  self.setup_logger(self.option.symbol, debug=self.option.debug)
 
@@ -117,29 +121,34 @@ class Trading():
 
     def buy(self, symbol, quantity, buyPrice, profitableSellingPrice):
 
-        # Do you have an open order?
-        self.check_order()
+        with self._lock:
+            # Do you have an open order?
+            self.check_order()
 
-        try:
+            try:
 
-            # Create order
-            orderId = Orders.buy_limit(symbol, quantity, buyPrice)
+                # Create order
+                orderId = Orders.buy_limit(symbol, quantity, buyPrice)
 
-            # Database log
-            Database.write([orderId, symbol, 0, buyPrice, 'BUY', quantity, self.option.profit])
+                if orderId is None:
+                    self.logger.error('Buy order failed - no orderId returned')
+                    return None
 
-            #print('Buy order created id:%d, q:%.8f, p:%.8f' % (orderId, quantity, float(buyPrice)))
-            self.logger.info('%s : Buy order created id:%d, q:%.8f, p:%.8f, Take profit aprox :%.8f' % (symbol, orderId, quantity, float(buyPrice), profitableSellingPrice))
+                # Database log
+                Database.write([orderId, symbol, 0, buyPrice, 'BUY', quantity, self.option.profit])
 
-            self.order_id = orderId
+                #print('Buy order created id:%d, q:%.8f, p:%.8f' % (orderId, quantity, float(buyPrice)))
+                self.logger.info('%s : Buy order created id:%d, q:%.8f, p:%.8f, Take profit aprox :%.8f' % (symbol, orderId, quantity, float(buyPrice), profitableSellingPrice))
 
-            return orderId
+                self.order_id = orderId
 
-        except Exception as e:
-            #print('bl: %s' % (e))
-            self.logger.debug('Buy error: %s' % (e))
-            time.sleep(self.WAIT_TIME_BUY_SELL)
-            return None
+                return orderId
+
+            except Exception as e:
+                #print('bl: %s' % (e))
+                self.logger.debug('Buy error: %s' % (e))
+                time.sleep(self.WAIT_TIME_BUY_SELL)
+                return None
 
     def sell(self, symbol, quantity, orderId, sell_price, last_price):
 
@@ -149,6 +158,10 @@ class Trading():
         '''
 
         buy_order = Orders.get_order(symbol, orderId)
+
+        if not buy_order:
+            self.logger.error('Could not get order info for orderId: %d' % orderId)
+            return
 
         if buy_order['status'] == 'FILLED' and buy_order['side'] == 'BUY':
             #print('Buy order filled... Try sell...')
@@ -169,7 +182,13 @@ class Trading():
                 self.order_id = 0
                 return
 
-        sell_order = Orders.sell_limit(symbol, quantity, sell_price)
+        # Use actual executed quantity instead of original quantity
+        actual_quantity = float(buy_order.get('executedQty', quantity))
+        if actual_quantity > 0:
+            sell_order = Orders.sell_limit(symbol, actual_quantity, sell_price)
+        else:
+            self.logger.warning('No quantity to sell')
+            return
 
         sell_id = sell_order['orderId']
         #print('Sell order create id: %d' % sell_id)
@@ -205,7 +224,8 @@ class Trading():
 
             if self.stop(symbol, quantity, sell_id, last_price):
 
-                if Orders.get_order(symbol, sell_id)['status'] != 'FILLED':
+                stop_loss_order = Orders.get_order(symbol, sell_id)
+                if stop_loss_order and stop_loss_order['status'] != 'FILLED':
                     #print('We apologize... Sold at loss...')
                     self.logger.info('We apologize... Sold at loss...')
 
@@ -215,9 +235,21 @@ class Trading():
                 self.cancel(symbol, sell_id)
                 exit(1)
 
+            sell_status_order = Orders.get_order(symbol, sell_id)
+            if not sell_status_order:
+                self.logger.error('Could not get sell order status for orderId: %d' % sell_id)
+                self.order_id = 0
+                self.order_data = None
+                return
+            
+            sell_status = sell_status_order['status']
             while (sell_status != 'FILLED'):
                 time.sleep(self.WAIT_TIME_CHECK_SELL)
-                sell_status = Orders.get_order(symbol, sell_id)['status']
+                sell_status_order = Orders.get_order(symbol, sell_id)
+                if not sell_status_order:
+                    self.logger.error('Could not get sell order status in loop for orderId: %d' % sell_id)
+                    break
+                sell_status = sell_status_order['status']
                 lastPrice = Orders.get_ticker(symbol)
                 #print('Status: %s Current price: %.8f Sell price: %.8f' % (sell_status, lastPrice, sell_price))
                 #print('Sold! Continue trading...')
@@ -483,7 +515,10 @@ class Trading():
         return symbol_info
 
     def format_step(self, quantity, stepSize):
-        return float(stepSize * math.floor(float(quantity)/stepSize))
+        precision = int(round(-math.log(stepSize, 10), 0))
+        quantity = Decimal(str(quantity))
+        step = Decimal(str(stepSize))
+        return float(quantity.quantize(step, rounding=ROUND_DOWN))
 
     def validate(self):
 
