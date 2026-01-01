@@ -184,11 +184,11 @@ class Trading():
                 return
 
         # Use actual executed quantity instead of original quantity
-        actual_quantity = float(buy_order.get('executedQty', quantity))
+        actual_quantity = float(buy_order.get('executedQty', 0))
         if actual_quantity > 0:
             sell_order = Orders.sell_limit(symbol, actual_quantity, sell_price)
         else:
-            self.logger.warning('No quantity to sell')
+            self.logger.warning('No quantity to sell - executedQty not available or zero')
             return
 
         sell_id = sell_order['orderId']
@@ -525,7 +525,6 @@ class Trading():
         return symbol_info
 
     def format_step(self, quantity, stepSize):
-        precision = int(round(-math.log(stepSize, 10), 0))
         quantity = Decimal(str(quantity))
         step = Decimal(str(stepSize))
         return float(quantity.quantize(step, rounding=ROUND_DOWN))
