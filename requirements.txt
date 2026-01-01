@@ -1,0 +1,21 @@
+# Binance Trader - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core dependencies
+requests>=2.31.0
+
+# Data analysis and numerical computing (optional, for future enhancements)
+# numpy>=1.24.0
+# pandas>=2.0.0
+
+# Logging (built-in, no install needed)
+# Standard library modules used:
+# - logging
+# - time
+# - math
+# - datetime
+# - typing
+# - sqlite3
+# - threading
+# - hmac
+# - hashlib

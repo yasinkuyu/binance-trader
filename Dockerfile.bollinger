@@ -1,0 +1,41 @@
+# Bollinger Bands Trading Bot - Docker Image
+# Build: docker build -f Dockerfile.bollinger -t binance-bollinger-bot .
+# Run: docker run -e SYMBOL=BTCUSDT -e AMOUNT=100 binance-bollinger-bot
+
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application files
+COPY app/ ./app/
+COPY trader_bollinger.py .
+COPY db/ ./db/
+
+# Create necessary directories
+RUN mkdir -p logs
+
+# Set environment variables with defaults
+ENV SYMBOL=BTCUSDT
+ENV AMOUNT=100
+ENV INTERVAL=5m
+ENV MIN_CONFIDENCE=50
+ENV RISK_PER_TRADE=2.0
+ENV TEST_MODE=false
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD pgrep -f trader_bollinger.py || exit 1
+
+# Run the bot
+CMD python3 trader_bollinger.py \
+    --symbol ${SYMBOL} \
+    --amount ${AMOUNT} \
+    --interval ${INTERVAL} \
+    --min_confidence ${MIN_CONFIDENCE} \
+    --risk_per_trade ${RISK_PER_TRADE} \
+    $(if [ "${TEST_MODE}" = "true" ]; then echo "--test_mode"; fi)
