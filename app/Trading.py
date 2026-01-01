@@ -186,6 +186,9 @@ class Trading():
         actual_quantity = float(buy_order.get('executedQty', quantity))
         if actual_quantity > 0:
             sell_order = Orders.sell_limit(symbol, actual_quantity, sell_price)
+            if not sell_order:
+                self.logger.error('Sell order failed - no order returned')
+                return
         else:
             self.logger.warning('No quantity to sell')
             return
@@ -250,6 +253,12 @@ class Trading():
                     self.logger.error('Could not get sell order status in loop for orderId: %d' % sell_id)
                     break
                 sell_status = sell_status_order['status']
+                
+                # Handle unexpected order statuses
+                if sell_status in ['CANCELED', 'REJECTED', 'EXPIRED']:
+                    self.logger.error('Sell order failed with status: %s' % sell_status)
+                    break
+                
                 lastPrice = Orders.get_ticker(symbol)
                 #print('Status: %s Current price: %.8f Sell price: %.8f' % (sell_status, lastPrice, sell_price))
                 #print('Sold! Continue trading...')
