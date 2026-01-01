@@ -10,7 +10,7 @@ import threading
 import math
 import logging
 import logging.handlers
-from decimal import Decimal, ROUND_DOWN
+from decimal import Decimal
 
 
 # Define Custom imports
@@ -189,6 +189,13 @@ class Trading():
             sell_order = Orders.sell_limit(symbol, actual_quantity, sell_price)
         else:
             self.logger.warning('No quantity to sell - executedQty not available or zero')
+            with self._lock:
+                self.order_id = 0
+                self.order_data = None
+            return
+
+        if not sell_order or 'orderId' not in sell_order:
+            self.logger.error('Sell order failed - no orderId returned')
             with self._lock:
                 self.order_id = 0
                 self.order_data = None
