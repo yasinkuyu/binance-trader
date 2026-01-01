@@ -1,8 +1,19 @@
-# Binance Trader (RC 2)
+# Binance Trader (v1.1.0)
 
 This is an experimental bot for auto trading the binance.com exchange. [@yasinkuyu](https://twitter.com/yasinkuyu)
 
 ![Screenshot](https://github.com/yasinkuyu/binance-trader/blob/master/img/screenshot.png)
+
+## Changelog
+
+### v1.1.0 (2026-01-01)
+- 🐛 Fixed: Bot not selling after buy order filled (#66, #134, #166)
+- 🐛 Fixed: KeyError when API returns error (#139, #154)
+- 🐛 Fixed: LOT_SIZE filter precision issues (#159)
+- 🐛 Fixed: Partially filled orders now correctly calculate sell quantity (#133, #178, #200)
+- 🐛 Fixed: NameError for undefined sell_price variable (#172)
+- 🔒 Improved: Thread safety with proper locking mechanism
+- ⚡ Improved: Better exception handling throughout the codebase
 
 ## Configuration
 
