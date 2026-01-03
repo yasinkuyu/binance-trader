@@ -9,17 +9,23 @@ from Indicators import Indicators
 
 class BollingerStrategy:
     """
-    Advanced Bollinger Bands Trading Strategy
+    Advanced Bollinger Bands Trading Strategy with MACD Confirmation
 
     Strategy Rules:
-    - BUY: Price touches/breaks lower band + RSI < 30 + High volume
-    - SELL: Price touches upper band OR reaches middle band (take profit)
+    - BUY: Price touches lower band + RSI < 30 + High volume + MACD bullish cross/momentum
+    - SELL: Price touches upper band + RSI > 70 + MACD bearish cross/momentum
+    - Alternative: Reach middle band (take profit)
     - Uses dynamic stop-loss based on ATR
+    
+    MACD Integration:
+    - Bullish signals confirmed when MACD shows bullish momentum
+    - Bearish signals confirmed when MACD shows bearish momentum
+    - Increases confidence score when MACD crosses signal line
     """
 
     def __init__(self, config: Dict = None):
         """
-        Initialize Bollinger Bands Strategy
+        Initialize Bollinger Bands Strategy with MACD
 
         Args:
             config: Strategy configuration parameters
@@ -47,11 +53,17 @@ class BollingerStrategy:
         self.min_bb_width = self.config.get('min_bb_width', 1.0)  # Minimum volatility
         self.max_bb_width = self.config.get('max_bb_width', 10.0)  # Maximum volatility
 
+        # MACD parameters
+        self.macd_fast = self.config.get('macd_fast', 12)
+        self.macd_slow = self.config.get('macd_slow', 26)
+        self.macd_signal = self.config.get('macd_signal', 9)
+        self.use_macd = self.config.get('use_macd', True)  # Enable/disable MACD confirmation
+
         self.logger = logging.getLogger('BollingerStrategy')
 
     def analyze(self, klines: List[List], current_price: float, current_volume: float = 0) -> Dict:
         """
-        Analyze market conditions using Bollinger Bands strategy
+        Analyze market conditions using Bollinger Bands + RSI + Volume + MACD strategy
 
         Args:
             klines: List of kline data [timestamp, open, high, low, close, volume, ...]
@@ -91,6 +103,10 @@ class BollingerStrategy:
         bb_percent = Indicators.bb_percent(current_price, upper_band, lower_band)
         volume_data = Indicators.volume_analysis(volumes, self.volume_period)
         atr = Indicators.atr(highs, lows, closes, 14)
+        
+        # Calculate MACD indicators
+        macd_line, signal_line, histogram = Indicators.macd(closes, self.macd_fast, self.macd_slow, self.macd_signal)
+        macd_signal_cross = Indicators.macd_signal_cross(closes, self.macd_fast, self.macd_slow, self.macd_signal) if self.use_macd else 'none'
 
         # Build analysis result
         analysis = {
@@ -103,7 +119,11 @@ class BollingerStrategy:
                 'bb_percent': bb_percent,
                 'rsi': rsi,
                 'volume_ratio': volume_data['volume_ratio'],
-                'atr': atr
+                'atr': atr,
+                'macd_line': macd_line,
+                'macd_signal': signal_line,
+                'macd_histogram': histogram,
+                'macd_signal_cross': macd_signal_cross
             },
             'signal': 'WAIT',
             'confidence': 0.0,
@@ -125,7 +145,7 @@ class BollingerStrategy:
         # Determine trading signal
         signal_result = self._generate_signal(
             current_price, upper_band, middle_band, lower_band,
-            rsi, volume_data, bb_percent, atr
+            rsi, volume_data, bb_percent, atr, macd_line, signal_line, histogram, macd_signal_cross
         )
 
         analysis.update(signal_result)
@@ -140,10 +160,21 @@ class BollingerStrategy:
         rsi: float,
         volume_data: Dict,
         bb_percent: float,
-        atr: float
+        atr: float,
+        macd_line: float,
+        macd_signal: float,
+        macd_histogram: float,
+        macd_signal_cross: str
     ) -> Dict:
         """
-        Generate trading signal based on strategy rules
+        Generate trading signal based on strategy rules + MACD confirmation
+
+        MACD Integration:
+        - BUY: Confirmation when MACD shows bullish_cross or bullish_momentum
+        - SELL: Confirmation when MACD shows bearish_cross or bearish_momentum
+        - Bollinger: Primary signal from price position and bands
+        - RSI: Secondary confirmation for momentum
+        - Volume: Tertiary confirmation for strength
 
         Returns:
             Dictionary with signal, confidence, and trade parameters
@@ -176,6 +207,18 @@ class BollingerStrategy:
             if bb_percent < 0.1:
                 confidence += 15
                 reasons.append('Price well below lower band')
+
+            # MACD confirmation - bullish momentum or cross
+            if self.use_macd:
+                if macd_signal_cross == 'bullish_cross':
+                    confidence += 25
+                    reasons.append('MACD bullish cross ↑')
+                elif macd_signal_cross == 'bullish_momentum':
+                    confidence += 15
+                    reasons.append('MACD bullish momentum')
+                elif macd_histogram < 0:
+                    confidence -= 10  # Bearish divergence
+                    reasons.append('MACD bearish (divergence warning)')
 
             if confidence >= 50:
                 # Calculate trade parameters
@@ -220,6 +263,18 @@ class BollingerStrategy:
             if bb_percent > 0.9:
                 confidence += 15
                 reasons.append('Price well above upper band')
+
+            # MACD confirmation - bearish momentum or cross
+            if self.use_macd:
+                if macd_signal_cross == 'bearish_cross':
+                    confidence += 25
+                    reasons.append('MACD bearish cross ↓')
+                elif macd_signal_cross == 'bearish_momentum':
+                    confidence += 15
+                    reasons.append('MACD bearish momentum')
+                elif macd_histogram > 0:
+                    confidence -= 10  # Bullish divergence
+                    reasons.append('MACD bullish (divergence warning)')
 
             if confidence >= 50:
                 return {

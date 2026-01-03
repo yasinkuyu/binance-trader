@@ -553,7 +553,7 @@ class Trading():
 
         minQty = float(filters['LOT_SIZE']['minQty'])
         minPrice = float(filters['PRICE_FILTER']['minPrice'])
-        minNotional = float(filters['MIN_NOTIONAL']['minNotional'])
+        minNotional = float(filters['NOTIONAL']['minNotional'])
         quantity = float(self.option.quantity)
 
         # stepSize defines the intervals that a quantity/icebergQty can be increased/decreased by.
