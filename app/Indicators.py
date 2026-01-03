@@ -197,29 +197,94 @@ class Indicators:
         """
         Calculate MACD (Moving Average Convergence Divergence)
 
+        MACD measures momentum and trend-following characteristics by:
+        - MACD Line: Fast EMA (12) - Slow EMA (26)
+        - Signal Line: 9-period EMA of MACD Line
+        - Histogram: MACD Line - Signal Line (visual difference)
+
+        Trading Signals:
+        - Bullish: MACD crosses above signal line (positive histogram)
+        - Bearish: MACD crosses below signal line (negative histogram)
+
         Args:
-            prices: List of closing prices
-            fast: Fast EMA period
-            slow: Slow EMA period
-            signal: Signal line period
+            prices: List of closing prices (most recent last)
+            fast: Fast EMA period (default: 12)
+            slow: Slow EMA period (default: 26)
+            signal: Signal line EMA period (default: 9)
 
         Returns:
-            Tuple of (MACD line, Signal line, Histogram)
+            Tuple of (MACD_line, Signal_line, Histogram)
+            Values near 0 = neutral, Positive = bullish, Negative = bearish
         """
         if len(prices) < slow:
             return 0.0, 0.0, 0.0
 
+        # Calculate EMAs
         ema_fast = Indicators.ema(prices, fast)
         ema_slow = Indicators.ema(prices, slow)
 
+        # MACD Line = Fast EMA - Slow EMA
         macd_line = ema_fast - ema_slow
 
-        # For signal line, we need historical MACD values
-        # Simplified calculation
-        signal_line = macd_line * 0.8  # Approximation
+        # Signal Line = 9-period EMA of MACD values (simplified with last N values)
+        # For proper calculation, we need historical MACD values
+        # Using simplified approach: approximate signal line
+        if len(prices) >= slow + signal:
+            # Calculate MACD values for last signal+slow periods
+            macd_values = []
+            for i in range(slow, len(prices)):
+                fast_ema = Indicators.ema(prices[:i+1], fast)
+                slow_ema = Indicators.ema(prices[:i+1], slow)
+                macd_values.append(fast_ema - slow_ema)
+
+            # Signal line is EMA of MACD values
+            if len(macd_values) >= signal:
+                signal_line = Indicators.ema(macd_values[-signal:], signal)
+            else:
+                signal_line = sum(macd_values) / len(macd_values) if macd_values else 0.0
+        else:
+            signal_line = macd_line * 0.8  # Fallback approximation
+
+        # Histogram = MACD - Signal
         histogram = macd_line - signal_line
 
         return macd_line, signal_line, histogram
+
+    @staticmethod
+    def macd_signal_cross(prices: List[float], fast: int = 12, slow: int = 26, signal: int = 9) -> str:
+        """
+        Detect MACD signal line crossovers
+
+        Returns:
+            'bullish_cross': MACD line crossed above signal line (buy signal)
+            'bearish_cross': MACD line crossed below signal line (sell signal)
+            'bullish_momentum': MACD > signal (positive momentum)
+            'bearish_momentum': MACD < signal (negative momentum)
+            'none': No clear signal
+        """
+        if len(prices) < slow + 2:
+            return 'none'
+
+        # Current values
+        macd_curr, signal_curr, hist_curr = Indicators.macd(prices[-slow:] if len(prices) >= slow else prices, fast, slow, signal)
+
+        # Previous values
+        if len(prices) >= slow + 1:
+            macd_prev, signal_prev, hist_prev = Indicators.macd(prices[-(slow+1):-1] if len(prices) > slow else prices, fast, slow, signal)
+        else:
+            return 'none'
+
+        # Detect crossovers
+        if macd_prev <= signal_prev and macd_curr > signal_curr:
+            return 'bullish_cross'
+        elif macd_prev >= signal_prev and macd_curr < signal_curr:
+            return 'bearish_cross'
+        elif macd_curr > signal_curr:
+            return 'bullish_momentum'
+        elif macd_curr < signal_curr:
+            return 'bearish_momentum'
+
+        return 'none'
 
     @staticmethod
     def support_resistance(prices: List[float], window: int = 20) -> Tuple[float, float]:

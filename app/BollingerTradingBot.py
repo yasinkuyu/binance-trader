@@ -94,7 +94,16 @@ class BollingerTradingBot:
             self.step_size = float(filters['LOT_SIZE']['stepSize'])
             self.tick_size = float(filters['PRICE_FILTER']['tickSize'])
             self.min_qty = float(filters['LOT_SIZE']['minQty'])
-            self.min_notional = float(filters['MIN_NOTIONAL']['minNotional'])
+            
+            # MIN_NOTIONAL filter may not exist for all symbols
+            # Also check newer NOTIONAL filter variant
+            if 'MIN_NOTIONAL' in filters:
+                self.min_notional = float(filters['MIN_NOTIONAL']['minNotional'])
+            elif 'NOTIONAL' in filters:
+                self.min_notional = float(filters['NOTIONAL']['minNotional'])
+            else:
+                # Fallback for symbols without MIN_NOTIONAL or NOTIONAL filter
+                self.min_notional = 0
 
             self.logger.info(f'Symbol validated: {self.symbol}')
             self.logger.debug(f'Step size: {self.step_size}, Tick size: {self.tick_size}')
@@ -159,25 +168,33 @@ class BollingerTradingBot:
             Analysis result dictionary or None
         """
         try:
+            self.logger.debug(f'Starting market analysis...')
+            
             # Get current price and volume
+            self.logger.debug(f'Fetching ticker for {self.symbol}...')
             ticker = self.client.get_ticker(self.symbol)
             current_price = float(ticker['lastPrice'])
             current_volume = float(ticker['volume'])
+            self.logger.debug(f'Ticker received: price={current_price}, volume={current_volume}')
 
             # Get historical data
+            self.logger.debug(f'Fetching klines...')
             klines = self.get_klines()
+            self.logger.debug(f'Klines received: {len(klines)} candles')
 
             if not klines:
                 self.logger.warning('No kline data available')
                 return None
 
             # Run strategy analysis
+            self.logger.debug(f'Running strategy analysis...')
             analysis = self.strategy.analyze(klines, current_price, current_volume)
+            self.logger.debug(f'Analysis complete')
 
             return analysis
 
         except Exception as e:
-            self.logger.error(f'Market analysis error: {e}')
+            self.logger.error(f'Market analysis error: {e}', exc_info=True)
             return None
 
     def execute_buy(self, analysis: Dict) -> bool:
@@ -368,6 +385,7 @@ class BollingerTradingBot:
         try:
             while True:
                 cycle += 1
+                self.logger.debug(f'=== Cycle {cycle} starting ===')
 
                 # Check max trades limit
                 if self.args.max_trades > 0 and self.trades_executed >= self.args.max_trades:
@@ -375,15 +393,17 @@ class BollingerTradingBot:
                     break
 
                 # Analyze market
+                self.logger.debug(f'Cycle {cycle}: Calling analyze_market()...')
                 analysis = self.analyze_market()
+                self.logger.debug(f'Cycle {cycle}: analyze_market() returned')
 
                 if not analysis:
                     self.logger.warning('Analysis failed, skipping cycle')
                     time.sleep(self.args.wait_time)
                     continue
 
-                # Log current state
-                self.logger.debug(f'Cycle {cycle}: Price={analysis["price"]:.8f}, Signal={analysis["signal"]}, Confidence={analysis["confidence"]:.0f}%')
+                # Log current state (always visible, not just debug)
+                self.logger.info(f'Cycle {cycle}: Price={analysis["price"]:.8f}, Signal={analysis["signal"]}, Confidence={analysis["confidence"]:.0f}%')
 
                 # Trading logic
                 if self.position is None:
@@ -410,7 +430,9 @@ class BollingerTradingBot:
                         self.execute_sell(analysis, 'Signal')
 
                 # Wait for next cycle
+                self.logger.debug(f'Cycle {cycle}: Waiting {self.args.wait_time}s before next cycle...')
                 time.sleep(self.args.wait_time)
+                self.logger.debug(f'Cycle {cycle}: Resuming after wait')
 
         except KeyboardInterrupt:
             self.logger.info('Bot stopped by user')
