@@ -1,172 +1,171 @@
-# Binance Trader (v1.1.0)
+ Structure du Projet
 
-This is an experimental bot for auto trading the binance.com exchange. [@yasinkuyu](https://twitter.com/yasinkuyu)
+```
+trading_bot/
+│
+├── data_collection.py
+├── feature_engineering.py
+├── model_training.py
+├── predict.py
+├── backtest.py
+├── risk_manager.py
+├── broker_api.py
+├── config.py
+└── main.py
+```
 
-![Screenshot](https://github.com/yasinkuyu/binance-trader/blob/master/img/screenshot.png)
+1. data_collection.py
 
-## Changelog
+```python
+import requests
+import pandas as pd
 
-### v1.1.0 (2026-01-01)
-- 🐛 Fixed: Bot not selling after buy order filled (#66, #134, #166)
-- 🐛 Fixed: KeyError when API returns error (#139, #154)
-- 🐛 Fixed: LOT_SIZE filter precision issues (#159)
-- 🐛 Fixed: Partially filled orders now correctly calculate sell quantity (#133, #178, #200)
-- 🐛 Fixed: NameError for undefined sell_price variable (#172)
-- 🔒 Improved: Thread safety with proper locking mechanism
-- ⚡ Improved: Better exception handling throughout the codebase
+def get_historical_prices(symbol='XAU/USDT', interval='1h', limit=1000):
+    data = []
+    for _ in range(3):  # Pour récupérer plusieurs lots de données historiques
+        url = f'https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}'
+        response = requests.get(url)
+        data.extend(response.json())
+    
+    df = pd.DataFrame(data, columns=['Open Time', 'Open', 'High', 'Low', 'Close', 'Volume'])
+    df['Open Time'] = pd.to_datetime(df['Open Time'], unit='ms')
+    df.set_index('Open Time', inplace=True)
+    df[['Open', 'High', 'Low', 'Close', 'Volume']] = df[['Open', 'High', 'Low', 'Close', 'Volume']].astype(float)
+    
+    return df
+```
+ 2. feature_engineering.py
 
-## Configuration
+```python
+import ta  
 
-1. [Signup](https://www.binance.com/?ref=10701111) for Binance
-2. Enable Two-factor Authentication
-3. Go API Center, [Create New](https://www.binance.com/en/my/settings/api-management?ref=10701111) Api Key
+def add_indicators(df):
+    df['RSI'] = ta.momentum.RSIIndicator(df['Close'], window=14).rsi()
+    df['SMA_20'] = df['Close'].rolling(window=20).mean()
+    df['SMA_50'] = df['Close'].rolling(window=50).mean()
+    df['volatility'] = df['Close'].pct_change().rolling(10).std()
+    
+    return df
+```
 
-        [✓] Read Info [✓] Enable Trading [X] Enable Withdrawals
+ 3. model_training.py
 
-4. Rename **config.sample.py** to `config.py` / **orders.sample.db** to `orders.db`
-5. Get an API and Secret Key, insert into `config.py`
+```python
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
 
-        API key for account access
-        api_key = ''
-        Secret key for account access
-        api_secret = ''
+def prepare_data_for_model(df):
+    df.dropna(inplace=True)
+    X = df[['RSI', 'SMA_20', 'SMA_50', 'volatility']]
+    df['target'] = (df['Close'].shift(-1) > df['Close']).astype(int)
+    df = df.iloc[:-1]  # Supprimer la dernière ligne pour éviter la cible incorrecte
+    
+    split = int(len(df) * 0.8)
+    X_train = X[:split]
+    X_test = X[split:]
+    y_train = df['target'][:split]
+    y_test = df['target'][split:]
+    
+    return X_train, X_test, y_train, y_test
 
-        [API Docs](https://www.binance.com/restapipub.html)
+def train_model(X_train, y_train):
+    model = LogisticRegression()
+    model.fit(X_train, y_train)
+    return model
 
-6. Optional: Modify recv_window value (not recommended)
+def evaluate_model(model, X_test, y_test):
+    predictions = model.predict(X_test)
+    accuracy = accuracy_score(y_test, predictions)
+    print(f"Précision du modèle : {accuracy:.2f}")
+```
 
-7. Optional: run as an excutable application in Docker containers
+4. predict.py
 
-## Support
+```python
+import joblib
 
-[https://www.binance.com/?ref=10701111](https://www.binance.com/?ref=10701111)
+def predict(input_data):
+    model = joblib.load("model.pkl")
+    return model.predict(input_data)
+```
 
-## Requirements
+5. backtest.py
 
-    sudo pip install requests
+```python
+def backtest_strategy(df, model, initial_capital=10000):
+    capital = initial_capital
+    position = 0
+    for index, row in df.iterrows():
+        prediction = model.predict([[row['RSI'], row['SMA_20'], row['SMA_50'], row['volatility']]])[0]
+        if prediction == 1 and capital > 0:  # Acheter
+            position = capital / row['Close']
+            capital = 0
+        elif prediction == 0 and position > 0:  # Vendre
+            capital = position * row['Close']
+            position = 0
+    return capital
+```
 
-    Python 3
-        import os
-        import sys
-        import time
-        import config
-        import argparse
-        import threading
-        import sqlite3
+ 6. risk_manager.py
 
-## Usage (trading module)
+```python
+class RiskManager:
+    def __init__(self, risk_per_trade):
+        self.risk_per_trade = risk_per_trade
 
-    python trader.py --symbol XVGBTC
+    def calculate_position_size(self, account_balance, stop_loss_distance):
+        risk_amount = account_balance * self.risk_per_trade
+        position_size = risk_amount / stop_loss_distance
+        return position_size
+```
 
-    Example parameters
+7. broker_api.py
 
-    # Profit mode (default)
-    python trader.py --symbol XVGBTC --quantity 300 --profit 1.3
-    or by amount
-    python trader.py --symbol XVGBTC --amount 0.0022 --profit 3
+```python
+import requests
 
-    # Range mode
-    python trader.py --symbol XVGBTC --mode range --quantity 300 --buyprice 0.00000780 --sellprice 0.00000790
-    or by amount
-    python trader.py --symbol XVGBTC --mode range --amount 0.0022 --buyprice 0.00000780 --sellprice 0.00000790
+class BrokerAPI:
+    def __init__(self, api_key):
+        self.api_key = api_key
 
-    --quantity     Buy/Sell Quantity (default 0) (If zero, auto calc)
-    --amount       Buy/Sell BTC Amount (default 0)
-    --symbol       Market Symbol (default XVGBTC or XVGETH)
-    --profit       Target Profit Percentage (default 1.3)
-    --stop_loss    Decrease sell price at loss Percentage (default 0)
-    --orderid      Target Order Id (default 0)
-    --wait_time    Wait Time (seconds) (default 0.7)
-    --increasing   Buy Price Increasing  +(default 0.00000001)
-    --decreasing   Sell Price Decreasing -(default 0.00000001)
-    --prints       Scanning Profit Screen Print (default True)
-    --loop         Loop (default 0 unlimited)
+    def place_order(self, symbol, quantity, order_type='MARKET'):
+        # Intégration de l'API du broker pour passer un ordre
+        pass  # Ajouter la logique d'envoi d'ordres ici
+```
 
-    --mode         Working modes profit or range (default profit)
-                   profit: Profit Hunter. Find defined profit, buy and sell. (Ex: 1.3% profit)
-                   range: Between target two price, buy and sell. (Ex: <= 0.00000780 buy - >= 0.00000790 sell )
+ 8. config.py
 
-    --buyprice     Buy price (Ex: 0.00000780)
-    --sellprice    Buy price (Ex: 0.00000790)
+```python
+SYMBOL = "BTCUSDT"
+RISK_PER_TRADE = 0.02
+INITIAL_CAPITAL = 10000
+```
 
-    Symbol structure;
-        XXXBTC  (Bitcoin)
-        XXXETH  (Ethereum)
-        XXXBNB  (Binance Coin)
-        XXXUSDT (Tether)
+9. main.py
 
-    All binance symbols are supported.
+```python
+from data_collection import get_historical_prices
+from feature_engineering import add_indicators
+from model_training import prepare_data_for_model, train_model, evaluate_model
+from backtest import backtest_strategy
+import joblib
 
-    Every coin can be different in --profit and --quantity.
-    If quantity is empty --quantity is automatically calculated to the minimum qty.
+def main():
+    df = get_historical_prices()
+    df = add_indicators(df)
+    
+    X_train, X_test, y_train, y_test = prepare_data_for_model(df)
+    
+    model = train_model(X_train, y_train)
+    evaluate_model(model, X_test, y_test)
+    
+    joblib.dump(model, "model.pkl")  # Sauvegarde du modèle
 
-    Variations;
-        trader.py --symbol TBNBTC --quantity 50 --profit 3
-        trader.py --symbol NEOBTC --amount 0.1 --profit 1.1
-        trader.py --symbol ETHUSDT --quantity 0.3 --profit 1.5
-        ...
+    # Backtest
+    final_capital = backtest_strategy(df, model)
+    print(f"Capital final après backtest : {final_capital:.2f}")
 
-## Usage (balances module)
-
-    python balance.py
-
-## Run in a Docker container
-
-    docker build -t trader .
-
-    docker run trader
-
-## DISCLAIMER
-
-    I am not responsible for anything done with this bot.
-    You use it at your own risk.
-    There are no warranties or guarantees expressed or implied.
-    You assume all responsibility and liability.
-
-## Contributing
-
-    Fork this Repo
-    Commit your changes (git commit -m 'Add some feature')
-    Push to the changes (git push)
-    Create a new Pull Request
-
-    Thanks all for your contributions...
-
-    Contributors
-        @WeSpeakCrypto
-        @afoke
-        @omerfarukz
-        @plgonzalezrx8
-
-## Troubleshooting
-
-    Filter failure: MIN_NOTIONAL
-    https://support.binance.com/hc/en-us/articles/115000594711-Trading-Rule
-
-    Filter failure: PRICE_FILTER
-    https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md
-
-    Timestamp for this request was 1000ms ahead of the server's time.
-    https://github.com/yasinkuyu/binance-trader/issues/63#issuecomment-355857901
-
-## Roadmap
-
-    - MACD indicator (buy/sell)
-    - Stop-Loss implementation
-    - Working modes
-      - profit: Find defined profit, buy and sell. (Ex: 1.3% profit)
-      - range:  Between target two price, buy and sell. (Ex: <= 0.00100 buy - >= 0.00150 sell )
-    - Binance/Bittrex/HitBTC Arbitrage  
-
-    ...
-
-    - October 7, 2017 Beta
-    - January 6, 2018 RC
-    - January 15, 2018 RC 1
-    - January 20, 2018 RC 2
-
-## License
-
-Code released under the [MIT License](https://opensource.org/licenses/MIT).
-
----
+if __name__ == "__main__":
+    main()
+```
