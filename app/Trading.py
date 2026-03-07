@@ -410,7 +410,7 @@ class Trading():
                 self.order_data = None
             return True
 
-        if check_order['status'] == 'NEW' or check_order['status'] != 'CANCELLED':
+        if check_order['status'] == 'NEW' or check_order['status'] == 'PARTIALLY_FILLED':
             Orders.cancel_order(symbol, orderId)
             with self._lock:
                 self.order_id = 0
